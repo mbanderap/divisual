@@ -14,6 +14,8 @@ const router = createRouter({
         { path: "empresas", name: "empresas", component: () => import("../views/CompaniesView.vue") },
         { path: "negocios", name: "negocios", component: () => import("../views/DealsView.vue") },
         { path: "hoteles", name: "hoteles", component: () => import("../views/HotelsView.vue") },
+        { path: "tickets", name: "tickets", component: () => import("../views/TicketsView.vue") },
+        { path: "tablero", name: "tablero", component: () => import("../views/BoardView.vue") },
         { path: "personal", name: "personal", component: () => import("../views/PersonnelView.vue") },
         { path: "ajustes", name: "ajustes", component: () => import("../views/SettingsView.vue") },
       ],

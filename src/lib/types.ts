@@ -112,11 +112,70 @@ export interface Personnel {
   hotels_personnel?: PersonnelHotelLink[];
 }
 
+export interface TicketContactLink {
+  id: number;
+  contacts?: { id: number; name: string };
+}
+
+export interface Ticket {
+  id: number;
+  title: string;
+  status: string | null;
+  plan_end_date: string | null;
+  company_id: number | null;
+  owner_id: number | null;
+  created_at: string;
+  companies?: { id: number; name: string };
+  personnel?: { id: number; name: string };
+  tickets_contacts?: TicketContactLink[];
+}
+
 export const DEAL_STAGES = ["Prospecto", "Contactado", "Propuesta", "Negociación", "Ganado", "Perdido"] as const;
 export type DealStage = (typeof DEAL_STAGES)[number];
 export const OPEN_STAGES: DealStage[] = ["Prospecto", "Contactado", "Propuesta", "Negociación"];
 export const LEAD_STATUSES = ["Lead", "Oportunidad", "Cliente", "Inactivo"] as const;
 export const CHARGE_TYPES = ["Mensual", "Trimestral", "Anual", "Pago único"] as const;
+
+export const TICKET_STAGES = ["Por iniciar", "Seguimiento activo", "Consolidación", "Décima alcanzada", "Cierre de ciclo"] as const;
+export type TicketStage = (typeof TICKET_STAGES)[number];
+export const OPEN_TICKET_STAGES: TicketStage[] = ["Por iniciar", "Seguimiento activo", "Consolidación", "Décima alcanzada"];
+
+export interface Story {
+  id: number;
+  name: string;
+}
+
+export interface TaskPersonnelLink {
+  id: number;
+  personnel?: { id: number; name: string };
+}
+
+export interface Task {
+  id: number;
+  title: string;
+  description: string | null;
+  type: string | null;
+  status: string | null;
+  story_id: number | null;
+  created_at: string;
+  stories?: { id: number; name: string };
+  tasks_personnel?: TaskPersonnelLink[];
+}
+
+export interface TaskComment {
+  id: number;
+  task_id: number;
+  author_email: string | null;
+  comment: string;
+  created_at: string;
+}
+
+export const TASK_TYPES = ["Tarea", "Bug"] as const;
+export type TaskType = (typeof TASK_TYPES)[number];
+
+export const TASK_STAGES = ["Por hacer", "En curso", "Pull Request", "Prueba en dev", "Listo en dev", "Listo en prod"] as const;
+export type TaskStage = (typeof TASK_STAGES)[number];
+export const OPEN_TASK_STAGES: TaskStage[] = ["Por hacer", "En curso", "Pull Request", "Prueba en dev", "Listo en dev"];
 
 export interface PagedListState<T> {
   rows: T[];

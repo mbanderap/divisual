@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { supabase } from "../lib/supabase";
 import { fetchAllRows, countRows } from "../lib/fetchAll";
-import type { Deal, Personnel, Tag, BillingModel, Hotel } from "../lib/types";
+import type { Deal, Personnel, Tag, BillingModel, Hotel, Ticket, Task, Story } from "../lib/types";
 
 interface Counts {
   contacts: number;
@@ -18,6 +18,9 @@ interface PanelStats {
 export const useCatalogStore = defineStore("catalogs", {
   state: () => ({
     deals: [] as Deal[],
+    tickets: [] as Ticket[],
+    tasks: [] as Task[],
+    stories: [] as Story[],
     personnel: [] as Personnel[],
     tags: [] as Tag[],
     billing: [] as BillingModel[],
@@ -26,16 +29,24 @@ export const useCatalogStore = defineStore("catalogs", {
   }),
   getters: {
     openDealsCount: (state) => state.deals.filter((d) => d.status && ["Prospecto", "Contactado", "Propuesta", "Negociación"].includes(d.status)).length,
+    openTicketsCount: (state) => state.tickets.filter((t) => t.status && ["Por iniciar", "Seguimiento activo", "Consolidación", "Décima alcanzada"].includes(t.status)).length,
+    openTasksCount: (state) => state.tasks.filter((t) => t.status && t.status !== "Listo en prod").length,
   },
   actions: {
     async loadCatalogs() {
-      const [deals, personnel, tags, billing] = await Promise.all([
+      const [deals, tickets, tasks, stories, personnel, tags, billing] = await Promise.all([
         fetchAllRows<Deal>("deals", "*, contacts(id, name), billing_models(id, name), deals_hotels(id, hotels(id, name))", "id"),
+        fetchAllRows<Ticket>("tickets", "*, companies(id, name), personnel(id, name), tickets_contacts(id, contacts(id, name))", "id"),
+        fetchAllRows<Task>("tasks", "*, stories(id, name), tasks_personnel(id, personnel(id, name))", "id"),
+        fetchAllRows<Story>("stories", "*", "name"),
         fetchAllRows<Personnel>("personnel", "*, hotels_personnel(role, area, hotels(id, name))", "name"),
         fetchAllRows<Tag>("tags", "*", "name"),
         fetchAllRows<BillingModel>("billing_models", "*", "name"),
       ]);
       this.deals = deals.sort((a, b) => b.id - a.id);
+      this.tickets = tickets.sort((a, b) => b.id - a.id);
+      this.tasks = tasks.sort((a, b) => b.id - a.id);
+      this.stories = stories;
       this.personnel = personnel;
       this.tags = tags;
       this.billing = billing;

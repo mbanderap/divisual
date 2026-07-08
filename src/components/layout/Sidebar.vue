@@ -45,6 +45,18 @@ onMounted(() => { if (!catalogs.counts.contacts) catalogs.loadCounts(); });
       <span>Personal</span><span class="count">{{ catalogs.personnel.length }}</span>
     </router-link>
 
+    <div class="nav-label">Customer Success</div>
+    <router-link class="nav-item" to="/tickets">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/><path d="M5.5 5.5l3 3M18.5 5.5l-3 3M5.5 18.5l3-3M18.5 18.5l-3-3"/></svg>
+      <span>Tickets</span><span class="count">{{ catalogs.openTicketsCount }}</span>
+    </router-link>
+
+    <div class="nav-label">Soporte / IT</div>
+    <router-link class="nav-item" to="/tablero">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="5" height="16" rx="1.2"/><rect x="9.5" y="4" width="5" height="10" rx="1.2"/><rect x="16" y="4" width="5" height="13" rx="1.2"/></svg>
+      <span>Tablero</span><span class="count">{{ catalogs.openTasksCount }}</span>
+    </router-link>
+
     <div class="nav-label">Sistema</div>
     <router-link class="nav-item" to="/ajustes">
       <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="2.5"/><path d="M4 5v14c0 1.4 3.6 2.5 8 2.5s8-1.1 8-2.5V5"/><path d="M4 12c0 1.4 3.6 2.5 8 2.5s8-1.1 8-2.5"/></svg>

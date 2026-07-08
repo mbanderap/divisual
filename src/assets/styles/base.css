@@ -136,17 +136,22 @@ tr:hover .row-actions, .co-card:hover .row-actions { opacity: 1; }
 .kcol-head { display: flex; align-items: baseline; justify-content: space-between; padding: 4px 6px 10px; }
 .kcol-head .kc-name { font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
 .kcol-head .kc-sum { font-family: var(--mono); font-size: 11.5px; color: var(--faint); }
-.deal { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 13px 11px; margin-bottom: 8px; cursor: grab; box-shadow: var(--shadow); transition: border-color .15s, transform .15s; }
-.deal:hover { border-color: var(--line-strong); }
-.deal:active { cursor: grabbing; }
-.deal.dragging { opacity: .45; transform: rotate(1.5deg); }
-.deal .d-title { font-weight: 600; font-size: 13.5px; line-height: 1.35; }
-.deal .d-company { font-size: 12px; color: var(--muted); margin-top: 3px; }
-.deal .d-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
-.deal .d-amount { font-family: var(--mono); font-size: 13px; font-weight: 600; }
-.deal .d-date { font-family: var(--mono); font-size: 10.5px; color: var(--faint); }
+.deal, .ticket, .task { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 13px 11px; margin-bottom: 8px; cursor: grab; box-shadow: var(--shadow); transition: border-color .15s, transform .15s; }
+.deal:hover, .ticket:hover, .task:hover { border-color: var(--line-strong); }
+.deal:active, .ticket:active, .task:active { cursor: grabbing; }
+.deal.dragging, .ticket.dragging, .task.dragging { opacity: .45; transform: rotate(1.5deg); }
+.deal .d-title, .ticket .t-title, .task .t-title { font-weight: 600; font-size: 13.5px; line-height: 1.35; }
+.deal .d-company, .ticket .t-company, .task .t-company { font-size: 12px; color: var(--muted); margin-top: 3px; }
+.deal .d-foot, .ticket .t-foot, .task .t-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+.deal .d-amount, .ticket .t-owner, .task .t-owner { font-family: var(--mono); font-size: 13px; font-weight: 600; }
+.deal .d-date, .ticket .t-date, .task .t-date { font-family: var(--mono); font-size: 10.5px; color: var(--faint); }
 .value-bar { height: 3px; border-radius: 2px; background: var(--line); margin-top: 9px; overflow: hidden; }
 .value-bar i { display: block; height: 100%; background: var(--accent); border-radius: 2px; }
+.task .t-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.task .task-id { font-family: var(--mono); font-size: 10.5px; color: var(--faint); }
+.task-type { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; }
+.task-type.bug { background: var(--danger-soft); color: var(--danger); }
+.task-type.tarea { background: var(--accent-soft); color: var(--accent); }
 
 .co-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 14px; }
 .co-card { padding: 18px 20px; transition: border-color .15s; cursor: pointer; position: relative; }
@@ -222,6 +227,7 @@ th .s-arrow { font-family: var(--mono); font-size: 10px; margin-left: 5px; color
 .field { margin-bottom: 14px; }
 .field label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
 .field input, .field select, .field textarea { width: 100%; padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); font-size: 13.5px; outline: none; transition: border-color .15s; }
+.field .readonly-value { padding: 9px 12px; font-size: 13.5px; color: var(--muted); }
 .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--accent-line); }
 .field textarea { resize: vertical; min-height: 64px; }
 .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
