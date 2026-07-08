@@ -23,6 +23,8 @@ const currentIj = ref<string>(props.hotel?.current_ij != null ? String(props.hot
 const objective = ref<string>(props.hotel?.objective != null ? String(props.hotel.objective) : "");
 const deviationDays = ref<string>(props.hotel?.deviation_days != null ? String(props.hotel.deviation_days) : "");
 const deviationPct = ref<string>(props.hotel?.deviation_pct != null ? String(props.hotel.deviation_pct) : "");
+const remainingTenths = ref<string>(props.hotel?.remaining_tenths != null ? String(props.hotel.remaining_tenths) : "");
+const invoiced = ref(String(props.hotel?.invoiced ?? false));
 const saving = ref(false);
 
 const assignments = ref<HotelPersonnelLink[]>([...(props.hotel?.hotels_personnel ?? [])]);
@@ -63,6 +65,8 @@ async function save() {
       tau: nnum(tau.value), contracted_tenths: nnum(contractedTenths.value), current_tenth: nnum(currentTenth.value),
       current_ij: nnum(currentIj.value), objective: nnum(objective.value),
       deviation_days: deviationDays.value === "" ? null : parseInt(deviationDays.value), deviation_pct: nnum(deviationPct.value),
+      remaining_tenths: nnum(remainingTenths.value), invoiced: invoiced.value === "true",
+      updated_at: new Date().toISOString(),
     };
     const { error } = props.hotel
       ? await supabase.from("hotels").update(row).eq("id", props.hotel.id)
@@ -95,6 +99,10 @@ async function save() {
     <div class="field-row">
       <div class="field"><label>Desviación (días)</label><input v-model="deviationDays" type="number" /></div>
       <div class="field"><label>Desviación (%)</label><input v-model="deviationPct" type="number" /></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Décimas restantes por consolidar</label><input v-model="remainingTenths" type="number" /></div>
+      <div class="field"><label>Factura de la década actual</label><select v-model="invoiced"><option value="false">No</option><option value="true">Sí</option></select></div>
     </div>
 
     <template v-if="hotel">

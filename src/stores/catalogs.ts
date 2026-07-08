@@ -36,7 +36,7 @@ export const useCatalogStore = defineStore("catalogs", {
     async loadCatalogs() {
       const [deals, tickets, tasks, stories, personnel, tags, billing] = await Promise.all([
         fetchAllRows<Deal>("deals", "*, contacts(id, name), billing_models(id, name), deals_hotels(id, hotels(id, name))", "id"),
-        fetchAllRows<Ticket>("tickets", "*, companies(id, name), personnel(id, name), tickets_contacts(id, contacts(id, name))", "id"),
+        fetchAllRows<Ticket>("tickets", "*, companies(id, name), personnel(id, name), hotels(id, name), tickets_contacts(id, contacts(id, name))", "id"),
         fetchAllRows<Task>("tasks", "*, stories(id, name), tasks_personnel(id, personnel(id, name))", "id"),
         fetchAllRows<Story>("stories", "*", "name"),
         fetchAllRows<Personnel>("personnel", "*, hotels_personnel(role, area, hotels(id, name))", "name"),

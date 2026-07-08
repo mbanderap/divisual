@@ -152,6 +152,7 @@ tr:hover .row-actions, .co-card:hover .row-actions { opacity: 1; }
 .task-type { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; }
 .task-type.bug { background: var(--danger-soft); color: var(--danger); }
 .task-type.tarea { background: var(--accent-soft); color: var(--accent); }
+.filter-select { padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); font-size: 13px; color: var(--ink); outline: none; }
 
 .co-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 14px; }
 .co-card { padding: 18px 20px; transition: border-color .15s; cursor: pointer; position: relative; }

@@ -35,6 +35,12 @@ onMounted(() => { if (!catalogs.counts.contacts) catalogs.loadCounts(); });
       <span>Negocios</span><span class="count">{{ catalogs.openDealsCount }}</span>
     </router-link>
 
+    <div class="nav-label">Administración / Ventas</div>
+    <router-link class="nav-item" to="/cartera">
+      <svg viewBox="0 0 24 24"><rect x="3" y="10" width="4" height="10" rx="1"/><rect x="10" y="6" width="4" height="14" rx="1"/><rect x="17" y="3" width="4" height="17" rx="1"/></svg>
+      <span>Cartera activa</span>
+    </router-link>
+
     <div class="nav-label">Operación</div>
     <router-link class="nav-item" to="/hoteles">
       <svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v14"/><path d="M9 9h1.5M13.5 9H15M9 13h1.5M13.5 13H15M10 21v-3h4v3"/></svg>

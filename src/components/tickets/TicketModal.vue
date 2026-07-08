@@ -8,7 +8,7 @@ import { useToastStore } from "../../stores/toast";
 import { syncBridge } from "../../lib/syncBridge";
 import { nn, fdate } from "../../lib/format";
 import { TICKET_STAGES } from "../../lib/types";
-import type { Ticket, Contact, Company, Personnel } from "../../lib/types";
+import type { Ticket, Contact, Company, Personnel, Hotel } from "../../lib/types";
 
 const props = defineProps<{ ticket?: Ticket | null }>();
 const emit = defineEmits<{ close: []; saved: [] }>();
@@ -20,6 +20,7 @@ const status = ref(props.ticket?.status ?? "Por iniciar");
 const planEndDate = ref(props.ticket?.plan_end_date ?? "");
 const companyId = ref<number | null>(props.ticket?.company_id ?? null);
 const ownerId = ref<number | null>(props.ticket?.owner_id ?? null);
+const hotelId = ref<number | null>(props.ticket?.hotel_id ?? null);
 const linkedContacts = ref(
   (props.ticket?.tickets_contacts ?? []).map((tc) => ({ id: tc.contacts!.id, label: tc.contacts!.name })).filter((x) => x.id),
 );
@@ -31,7 +32,7 @@ async function save() {
   try {
     const row = {
       title: title.value.trim(), status: status.value,
-      plan_end_date: nn(planEndDate.value), company_id: companyId.value, owner_id: ownerId.value,
+      plan_end_date: nn(planEndDate.value), company_id: companyId.value, owner_id: ownerId.value, hotel_id: hotelId.value,
     };
     let id = props.ticket?.id;
     if (props.ticket) {
@@ -61,7 +62,7 @@ async function save() {
       </div>
       <div class="field"><label>Fin de plan</label><input v-model="planEndDate" type="date" /></div>
     </div>
-    <div class="field-row">
+    <div class="field-row-3">
       <ComboSingle
         v-model="companyId"
         label="Empresa asociada"
@@ -79,6 +80,15 @@ async function save() {
         select-cols="id, name"
         :label-fn="(r: Personnel) => r.name"
         :initial-label="ticket?.personnel?.name"
+      />
+      <ComboSingle
+        v-model="hotelId"
+        label="Hotel asociado"
+        table="hotels"
+        search-col="name"
+        select-cols="id, name"
+        :label-fn="(r: Hotel) => r.name"
+        :initial-label="ticket?.hotels?.name"
       />
     </div>
     <MultiPicker

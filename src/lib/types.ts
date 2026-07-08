@@ -93,9 +93,13 @@ export interface Hotel {
   deviation_days: number | null;
   deviation_pct: number | null;
   current_tenth: number | null;
+  remaining_tenths: number | null;
+  invoiced: boolean | null;
   plan_end_date: string | null;
+  updated_at: string | null;
   hotels_personnel?: HotelPersonnelLink[];
   deals_hotels?: HotelDealLink[];
+  tickets?: { id: number; status: string | null; created_at: string }[];
 }
 
 export interface PersonnelHotelLink {
@@ -124,9 +128,11 @@ export interface Ticket {
   plan_end_date: string | null;
   company_id: number | null;
   owner_id: number | null;
+  hotel_id: number | null;
   created_at: string;
   companies?: { id: number; name: string };
   personnel?: { id: number; name: string };
+  hotels?: { id: number; name: string };
   tickets_contacts?: TicketContactLink[];
 }
 
