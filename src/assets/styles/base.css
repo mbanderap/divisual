@@ -66,6 +66,7 @@ h1 { font-family: var(--display); font-size: 24px; font-weight: 700; letter-spac
 .icon-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .content { flex: 1; overflow-y: auto; padding: 28px; }
 .view { max-width: 1180px; margin: 0 auto; }
+.view-wide { max-width: none; }
 .view-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 22px; flex-wrap: wrap; }
 .view-sub { color: var(--muted); font-size: 13px; margin-top: 3px; }
 

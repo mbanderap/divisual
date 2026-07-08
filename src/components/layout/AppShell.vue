@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { onMounted } from "vue";
+import { useRoute } from "vue-router";
 import Sidebar from "./Sidebar.vue";
 import Topbar from "./Topbar.vue";
 import { useCatalogStore } from "../../stores/catalogs";
 
 const catalogs = useCatalogStore();
+const route = useRoute();
 onMounted(async () => {
   await Promise.all([catalogs.loadCounts(), catalogs.loadCatalogs()]);
 });
@@ -15,7 +17,7 @@ onMounted(async () => {
     <Sidebar />
     <div class="main">
       <Topbar />
-      <div class="content"><div class="view"><router-view /></div></div>
+      <div class="content"><div class="view" :class="{ 'view-wide': route.name === 'negocios' }"><router-view /></div></div>
     </div>
   </div>
 </template>
