@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { supabase } from "../lib/supabase";
 import { fetchAllRows, countRows } from "../lib/fetchAll";
-import type { Deal, Personnel, Tag, BillingModel, Hotel, Ticket, Task, Story } from "../lib/types";
+import type { Deal, Personnel, Tag, BillingModel, Hotel, Ticket, Task, Story, CalendarEvent } from "../lib/types";
 
 interface Counts {
   contacts: number;
@@ -21,6 +21,7 @@ export const useCatalogStore = defineStore("catalogs", {
     tickets: [] as Ticket[],
     tasks: [] as Task[],
     stories: [] as Story[],
+    events: [] as CalendarEvent[],
     personnel: [] as Personnel[],
     tags: [] as Tag[],
     billing: [] as BillingModel[],
@@ -34,22 +35,28 @@ export const useCatalogStore = defineStore("catalogs", {
   },
   actions: {
     async loadCatalogs() {
-      const [deals, tickets, tasks, stories, personnel, tags, billing] = await Promise.all([
+      // Promise.allSettled: si una tabla falla (p.ej. todavía no se ha creado
+      // en Supabase) o no existe, el resto de catálogos se cargan igual en
+      // vez de dejar toda la carga colgada o vacía.
+      const results = await Promise.allSettled([
         fetchAllRows<Deal>("deals", "*, contacts(id, name), billing_models(id, name), deals_hotels(id, hotels(id, name))", "id"),
         fetchAllRows<Ticket>("tickets", "*, companies(id, name), personnel(id, name), hotels(id, name), tickets_contacts(id, contacts(id, name))", "id"),
         fetchAllRows<Task>("tasks", "*, stories(id, name), tasks_personnel(id, personnel(id, name))", "id"),
         fetchAllRows<Story>("stories", "*", "name"),
+        fetchAllRows<CalendarEvent>("events", "*, events_personnel(id, personnel(id, name))", "start_date"),
         fetchAllRows<Personnel>("personnel", "*, hotels_personnel(role, area, hotels(id, name))", "name"),
         fetchAllRows<Tag>("tags", "*", "name"),
         fetchAllRows<BillingModel>("billing_models", "*", "name"),
       ]);
-      this.deals = deals.sort((a, b) => b.id - a.id);
-      this.tickets = tickets.sort((a, b) => b.id - a.id);
-      this.tasks = tasks.sort((a, b) => b.id - a.id);
-      this.stories = stories;
-      this.personnel = personnel;
-      this.tags = tags;
-      this.billing = billing;
+      const [deals, tickets, tasks, stories, events, personnel, tags, billing] = results.map((r) => (r.status === "fulfilled" ? r.value : []));
+      this.deals = (deals as Deal[]).sort((a, b) => b.id - a.id);
+      this.tickets = (tickets as Ticket[]).sort((a, b) => b.id - a.id);
+      this.tasks = (tasks as Task[]).sort((a, b) => b.id - a.id);
+      this.stories = stories as Story[];
+      this.events = events as CalendarEvent[];
+      this.personnel = personnel as Personnel[];
+      this.tags = tags as Tag[];
+      this.billing = billing as BillingModel[];
     },
     async loadCounts() {
       const [contacts, companies, hotels, hotelsPlan, contactsCliente] = await Promise.all([

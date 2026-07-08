@@ -197,6 +197,25 @@ export interface Message {
   created_at: string;
 }
 
+export interface EventPersonnelLink {
+  id: number;
+  personnel?: { id: number; name: string };
+}
+
+export interface CalendarEvent {
+  id: number;
+  title: string;
+  description: string | null;
+  category: string; // "Despliegue" | "Reunión" | "Vacaciones" | "Teletrabajo"
+  start_date: string;
+  end_date: string | null;
+  created_at: string;
+  events_personnel?: EventPersonnelLink[];
+}
+
+export const EVENT_CATEGORIES = ["Despliegue", "Reunión", "Vacaciones", "Teletrabajo"] as const;
+export type EventCategory = (typeof EVENT_CATEGORIES)[number];
+
 export interface PagedListState<T> {
   rows: T[];
   page: number;

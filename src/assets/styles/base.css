@@ -188,6 +188,21 @@ tr.row-highlight:hover { background: var(--accent-soft); }
 .chat-composer input { flex: 1; padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); font-size: 13.5px; outline: none; }
 .chat-composer input:focus { border-color: var(--accent-line); }
 
+/* calendario */
+.cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.cal-month { font-family: var(--display); font-weight: 700; font-size: 16px; text-transform: capitalize; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+.cal-weekdays { margin-bottom: 4px; }
+.cal-weekday { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--faint); padding: 6px 4px; text-align: center; }
+.cal-day { min-height: 92px; border: 1px solid var(--line); padding: 6px; cursor: pointer; transition: background .12s; overflow: hidden; }
+.cal-day:hover { background: var(--surface-2); }
+.cal-day.outside { color: var(--faint); background: var(--surface-2); }
+.cal-day.today .cal-daynum { color: #fff; background: var(--accent); border-radius: 99px; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; }
+.cal-daynum { font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+.cal-pills { display: flex; flex-direction: column; gap: 2px; }
+.cal-pill { display: block; width: 100%; box-sizing: border-box; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 10px; padding: 1px 6px; }
+.cal-more { font-size: 10px; color: var(--faint); padding: 1px 6px; }
+
 .co-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 14px; }
 .co-card { padding: 18px 20px; transition: border-color .15s; cursor: pointer; position: relative; }
 .co-card:hover { border-color: var(--line-strong); }

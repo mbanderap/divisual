@@ -10,6 +10,12 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-07-08",
+    title: "Calendario conjunto",
+    description: "Vista técnica (subidas a producción), Eventos (reuniones) y Vacaciones/teletrabajo, con filtro por persona y un roadmap del día al hacer clic en una fecha.",
+    status: "done",
+  },
+  {
+    date: "2026-07-08",
     title: "Chat interno con solicitud de tareas",
     description: "Mensajería 1 a 1 entre personal de la empresa, con un botón para solicitar una tarea dentro de la conversación. El destinatario acepta o rechaza; al aceptar, la tarea se crea automáticamente en el Tablero.",
     status: "done",
@@ -47,7 +53,7 @@ export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-07-08",
     title: "Ejecutar el SQL nuevo en Supabase",
-    description: "Crear las tablas de Tickets, Tablero, Cartera activa y Chat (ver carpeta sql/) en el proyecto real de Supabase.",
+    description: "Crear las tablas de Tickets, Tablero, Cartera activa, Chat y Calendario (ver carpeta sql/) en el proyecto real de Supabase.",
     status: "planned",
   },
   {

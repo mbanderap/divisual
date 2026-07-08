@@ -21,6 +21,7 @@ const router = createRouter({
         { path: "ajustes", name: "ajustes", component: () => import("../views/SettingsView.vue") },
         { path: "changelog", name: "changelog", component: () => import("../views/ChangelogView.vue") },
         { path: "chat", name: "chat", component: () => import("../views/ChatView.vue") },
+        { path: "calendario", name: "calendario", component: () => import("../views/CalendarView.vue") },
       ],
     },
   ],

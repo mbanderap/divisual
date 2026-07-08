@@ -24,6 +24,10 @@ onMounted(() => { if (!catalogs.counts.contacts) catalogs.loadCounts(); });
       <svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8A2.5 2.5 0 0 1 17.5 16H10l-4.5 4v-4H6.5A2.5 2.5 0 0 1 4 13.5z"/></svg>
       <span>Chat</span>
     </router-link>
+    <router-link class="nav-item" to="/calendario">
+      <svg viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="16" rx="2"/><path d="M3.5 9.5h17M8 3v3M16 3v3"/></svg>
+      <span>Calendario</span>
+    </router-link>
 
     <div class="nav-label">CRM</div>
     <router-link class="nav-item" to="/contactos">

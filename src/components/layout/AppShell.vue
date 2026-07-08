@@ -17,7 +17,7 @@ onMounted(async () => {
     <Sidebar />
     <div class="main">
       <Topbar />
-      <div class="content"><div class="view" :class="{ 'view-wide': route.name === 'negocios' || route.name === 'tickets' || route.name === 'tablero' || route.name === 'cartera' || route.name === 'chat' }"><router-view /></div></div>
+      <div class="content"><div class="view" :class="{ 'view-wide': route.name === 'negocios' || route.name === 'tickets' || route.name === 'tablero' || route.name === 'cartera' || route.name === 'chat' || route.name === 'calendario' }"><router-view /></div></div>
     </div>
   </div>
 </template>
