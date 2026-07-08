@@ -183,6 +183,20 @@ export const TASK_STAGES = ["Por hacer", "En curso", "Pull Request", "Prueba en 
 export type TaskStage = (typeof TASK_STAGES)[number];
 export const OPEN_TASK_STAGES: TaskStage[] = ["Por hacer", "En curso", "Pull Request", "Prueba en dev", "Listo en dev"];
 
+export interface Message {
+  id: number;
+  sender_email: string;
+  recipient_email: string;
+  body: string | null;
+  type: string; // "text" | "task_request"
+  task_title: string | null;
+  task_description: string | null;
+  task_type: string | null;
+  task_response: string | null; // "pending" | "accepted" | "declined"
+  task_id: number | null;
+  created_at: string;
+}
+
 export interface PagedListState<T> {
   rows: T[];
   page: number;

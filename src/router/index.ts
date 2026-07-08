@@ -19,6 +19,8 @@ const router = createRouter({
         { path: "cartera", name: "cartera", component: () => import("../views/PortfolioView.vue") },
         { path: "personal", name: "personal", component: () => import("../views/PersonnelView.vue") },
         { path: "ajustes", name: "ajustes", component: () => import("../views/SettingsView.vue") },
+        { path: "changelog", name: "changelog", component: () => import("../views/ChangelogView.vue") },
+        { path: "chat", name: "chat", component: () => import("../views/ChatView.vue") },
       ],
     },
   ],

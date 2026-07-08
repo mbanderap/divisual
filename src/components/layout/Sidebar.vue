@@ -20,6 +20,10 @@ onMounted(() => { if (!catalogs.counts.contacts) catalogs.loadCounts(); });
       <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
       <span>Panel</span>
     </router-link>
+    <router-link class="nav-item" to="/chat">
+      <svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8A2.5 2.5 0 0 1 17.5 16H10l-4.5 4v-4H6.5A2.5 2.5 0 0 1 4 13.5z"/></svg>
+      <span>Chat</span>
+    </router-link>
 
     <div class="nav-label">CRM</div>
     <router-link class="nav-item" to="/contactos">
@@ -67,6 +71,10 @@ onMounted(() => { if (!catalogs.counts.contacts) catalogs.loadCounts(); });
     <router-link class="nav-item" to="/ajustes">
       <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="2.5"/><path d="M4 5v14c0 1.4 3.6 2.5 8 2.5s8-1.1 8-2.5V5"/><path d="M4 12c0 1.4 3.6 2.5 8 2.5s8-1.1 8-2.5"/></svg>
       <span>Ajustes</span>
+    </router-link>
+    <router-link class="nav-item" to="/changelog">
+      <svg viewBox="0 0 24 24"><path d="M8 3v4M16 3v4M4 9h16M5 6h14a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1z"/><path d="M8 14l2.5 2.5L16 11"/></svg>
+      <span>Changelog</span>
     </router-link>
 
     <div class="sidebar-foot">
