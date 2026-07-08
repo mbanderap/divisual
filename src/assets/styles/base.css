@@ -152,6 +152,9 @@ tr:hover .row-actions, .co-card:hover .row-actions { opacity: 1; }
 .task-type { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; }
 .task-type.bug { background: var(--danger-soft); color: var(--danger); }
 .task-type.tarea { background: var(--accent-soft); color: var(--accent); }
+.task.prio-alta { border-left: 3px solid var(--danger); }
+.task.prio-media { border-left: 3px solid var(--warn); }
+.task.prio-baja { border-left: 3px solid var(--line-strong); }
 .filter-select { padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); font-size: 13px; color: var(--ink); outline: none; }
 .tabs { display: flex; gap: 22px; border-bottom: 1px solid var(--line); margin-bottom: 20px; }
 .tab-btn { padding: 10px 0; font-size: 13.5px; font-weight: 600; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color .15s, border-color .15s; }
@@ -162,6 +165,11 @@ tr:hover .row-actions, .co-card:hover .row-actions { opacity: 1; }
 .card.panel { margin-bottom: 14px; }
 tr.row-highlight { background: var(--accent-soft); }
 tr.row-highlight:hover { background: var(--accent-soft); }
+.backlog-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.backlog-row:last-child { border-bottom: none; }
+.backlog-row .backlog-title { flex: 1; font-size: 13.5px; cursor: pointer; }
+.backlog-row .backlog-title:hover { color: var(--accent); }
+.backlog-row .filter-select { font-size: 12px; padding: 5px 8px; }
 
 /* chat */
 .chat-shell { display: grid; grid-template-columns: 280px 1fr; height: calc(100vh - 190px); min-height: 420px; border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden; background: var(--surface); }

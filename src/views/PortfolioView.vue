@@ -48,6 +48,12 @@ function diasRestantes(dateStr: string): number {
 function fdateShort(iso: string | null | undefined): string {
   return iso ? new Date(iso).toLocaleDateString("es-ES") : "—";
 }
+function tenthTrend(h: Hotel): "up" | "down" | "flat" | null {
+  if (h.current_ij == null || h.last_known_tenth == null) return null;
+  if (h.current_ij > h.last_known_tenth) return "up";
+  if (h.current_ij < h.last_known_tenth) return "down";
+  return "flat";
+}
 
 const tab = ref<"resumen" | "tickets">("resumen");
 
@@ -61,6 +67,8 @@ const finPlanRows = computed(() =>
     .sort((a, b) => diasRestantes(a.plan_end_date!) - diasRestantes(b.plan_end_date!)),
 );
 const sinImporte = computed(() => rows.value.filter((h) => importe(h) === 0).length);
+const subiendo = computed(() => rows.value.filter((h) => tenthTrend(h) === "up").length);
+const bajando = computed(() => rows.value.filter((h) => tenthTrend(h) === "down").length);
 const decimasContratadas = computed(() => rows.value.reduce((s, h) => s + (h.contracted_tenths || 0), 0));
 const consolidadas = computed(() => catalogs.tickets.filter((t) => t.status === "Décima alcanzada").length);
 const tasaConsolidacion = computed(() => (decimasContratadas.value ? Math.round((consolidadas.value / decimasContratadas.value) * 100) : 0));
@@ -104,6 +112,7 @@ const visible = computed(() => {
       <div class="card kpi"><div class="k-label">En riesgo</div><div class="k-value">{{ enRiesgo }}</div><div class="k-delta">desviación &gt;5 meses</div></div>
       <div class="card kpi"><div class="k-label">Fin plan &lt;30 días</div><div class="k-value">{{ finPlanRows.length }}</div><div class="k-delta">hoteles urgentes</div></div>
       <div class="card kpi"><div class="k-label">Sin importe</div><div class="k-value">{{ sinImporte }}</div><div class="k-delta">tickets incompletos</div></div>
+      <div class="card kpi"><div class="k-label">Décima subiendo</div><div class="k-value pos">{{ subiendo }}</div><div class="k-delta">{{ bajando }} bajando</div></div>
       <div class="card kpi"><div class="k-label">Décimas contratadas</div><div class="k-value">{{ decimasContratadas }}</div><div class="k-delta">total cartera</div></div>
       <div class="card kpi"><div class="k-label">Tasa consolidación</div><div class="k-value pos">{{ tasaConsolidacion }}%</div><div class="k-delta">{{ consolidadas }} consolidadas</div></div>
     </div>
@@ -117,7 +126,11 @@ const visible = computed(() => {
             <tr v-for="h in recentChanges" :key="h.id" :class="{ 'row-highlight': etapa(h) === 'Consolidación' }">
               <td>{{ h.name }}</td>
               <td><span class="tag" :class="etapa(h) === 'Mantenimiento' ? 'inactivo' : 'oportunidad'">{{ etapa(h) }}</span></td>
-              <td class="num">{{ h.current_ij != null ? num(h.current_ij) : "—" }}</td>
+              <td class="num">
+                {{ h.current_ij != null ? num(h.current_ij) : "—" }}
+                <span v-if="tenthTrend(h) === 'up'" class="pos">▲</span>
+                <span v-else-if="tenthTrend(h) === 'down'" class="neg">▼</span>
+              </td>
               <td class="num">{{ eur(importe(h)) }}</td>
               <td class="num">{{ fdateShort(h.updated_at) }}</td>
             </tr>

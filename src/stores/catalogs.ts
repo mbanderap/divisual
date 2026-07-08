@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { supabase } from "../lib/supabase";
 import { fetchAllRows, countRows } from "../lib/fetchAll";
-import type { Deal, Personnel, Tag, BillingModel, Hotel, Ticket, Task, Story, CalendarEvent } from "../lib/types";
+import type { Deal, Personnel, Tag, BillingModel, Hotel, Ticket, Task, Story, Sprint, TaskLabel, CalendarEvent } from "../lib/types";
 
 interface Counts {
   contacts: number;
@@ -21,6 +21,8 @@ export const useCatalogStore = defineStore("catalogs", {
     tickets: [] as Ticket[],
     tasks: [] as Task[],
     stories: [] as Story[],
+    sprints: [] as Sprint[],
+    labels: [] as TaskLabel[],
     events: [] as CalendarEvent[],
     personnel: [] as Personnel[],
     tags: [] as Tag[],
@@ -41,18 +43,22 @@ export const useCatalogStore = defineStore("catalogs", {
       const results = await Promise.allSettled([
         fetchAllRows<Deal>("deals", "*, contacts(id, name), billing_models(id, name), deals_hotels(id, hotels(id, name))", "id"),
         fetchAllRows<Ticket>("tickets", "*, companies(id, name), personnel(id, name), hotels(id, name), tickets_contacts(id, contacts(id, name))", "id"),
-        fetchAllRows<Task>("tasks", "*, stories(id, name), tasks_personnel(id, personnel(id, name))", "id"),
+        fetchAllRows<Task>("tasks", "*, stories(id, name), sprints(id, name), tasks_personnel(id, personnel(id, name)), tasks_labels(id, labels(id, name, color))", "id"),
         fetchAllRows<Story>("stories", "*", "name"),
+        fetchAllRows<Sprint>("sprints", "*", "start_date"),
+        fetchAllRows<TaskLabel>("labels", "*", "name"),
         fetchAllRows<CalendarEvent>("events", "*, events_personnel(id, personnel(id, name))", "start_date"),
         fetchAllRows<Personnel>("personnel", "*, hotels_personnel(role, area, hotels(id, name))", "name"),
         fetchAllRows<Tag>("tags", "*", "name"),
         fetchAllRows<BillingModel>("billing_models", "*", "name"),
       ]);
-      const [deals, tickets, tasks, stories, events, personnel, tags, billing] = results.map((r) => (r.status === "fulfilled" ? r.value : []));
+      const [deals, tickets, tasks, stories, sprints, labels, events, personnel, tags, billing] = results.map((r) => (r.status === "fulfilled" ? r.value : []));
       this.deals = (deals as Deal[]).sort((a, b) => b.id - a.id);
       this.tickets = (tickets as Ticket[]).sort((a, b) => b.id - a.id);
       this.tasks = (tasks as Task[]).sort((a, b) => b.id - a.id);
       this.stories = stories as Story[];
+      this.sprints = sprints as Sprint[];
+      this.labels = labels as TaskLabel[];
       this.events = events as CalendarEvent[];
       this.personnel = personnel as Personnel[];
       this.tags = tags as Tag[];

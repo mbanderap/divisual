@@ -10,6 +10,30 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-07-08",
+    title: "Backlog y etiquetas en el Tablero",
+    description: "Pestaña Backlog: todas las tareas nacen sin sprint y se agrupan por sprint (o Backlog) con un desplegable para moverlas y cambiar su etapa. Etiquetas de color creables al vuelo y asignables a cualquier tarea.",
+    status: "done",
+  },
+  {
+    date: "2026-07-08",
+    title: "Sprints, subtareas y adjuntos en el Tablero",
+    description: "Sprints con fecha de inicio/fin y filtro en el tablero, checklist de subtareas dentro de cada tarea, y adjuntar enlaces (documentos, capturas...) a la ficha de la tarea.",
+    status: "done",
+  },
+  {
+    date: "2026-07-08",
+    title: "Prioridad y fecha límite en el Tablero",
+    description: "Cada tarea tiene ahora prioridad (Alta/Media/Baja, con color en el borde de la tarjeta) y fecha límite (en rojo si está vencida).",
+    status: "done",
+  },
+  {
+    date: "2026-07-08",
+    title: "Importación de Hoteles desde Jaippy + seguimiento de década",
+    description: "Script para traer name/tau/has_plan/plan_end_date/deviation_days/current_ij desde la base de datos de Jaippy. Nuevo: last_known_tenth, last_tenth_check_at y tenth_increased para saber qué hoteles suben o bajan de década entre ejecuciones (flecha ▲▼ en Cartera activa).",
+    status: "done",
+  },
+  {
+    date: "2026-07-08",
     title: "Calendario conjunto",
     description: "Vista técnica (subidas a producción), Eventos (reuniones) y Vacaciones/teletrabajo, con filtro por persona y un roadmap del día al hacer clic en una fecha.",
     status: "done",

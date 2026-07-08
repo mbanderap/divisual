@@ -97,6 +97,9 @@ export interface Hotel {
   invoiced: boolean | null;
   plan_end_date: string | null;
   updated_at: string | null;
+  last_known_tenth: number | null;
+  last_tenth_check_at: string | null;
+  tenth_increased: boolean | null;
   hotels_personnel?: HotelPersonnelLink[];
   deals_hotels?: HotelDealLink[];
   tickets?: { id: number; status: string | null; created_at: string }[];
@@ -151,9 +154,28 @@ export interface Story {
   name: string;
 }
 
+export interface Sprint {
+  id: number;
+  name: string;
+  start_date: string | null;
+  end_date: string | null;
+  active: boolean | null;
+}
+
 export interface TaskPersonnelLink {
   id: number;
   personnel?: { id: number; name: string };
+}
+
+export interface TaskLabel {
+  id: number;
+  name: string;
+  color: string;
+}
+
+export interface TaskLabelLink {
+  id: number;
+  labels?: TaskLabel;
 }
 
 export interface Task {
@@ -162,10 +184,15 @@ export interface Task {
   description: string | null;
   type: string | null;
   status: string | null;
+  priority: string | null;
+  due_date: string | null;
   story_id: number | null;
+  sprint_id: number | null;
   created_at: string;
   stories?: { id: number; name: string };
+  sprints?: { id: number; name: string };
   tasks_personnel?: TaskPersonnelLink[];
+  tasks_labels?: TaskLabelLink[];
 }
 
 export interface TaskComment {
@@ -176,8 +203,27 @@ export interface TaskComment {
   created_at: string;
 }
 
+export interface TaskSubitem {
+  id: number;
+  task_id: number;
+  title: string;
+  done: boolean;
+  created_at: string;
+}
+
+export interface TaskAttachment {
+  id: number;
+  task_id: number;
+  label: string;
+  url: string;
+  created_at: string;
+}
+
 export const TASK_TYPES = ["Tarea", "Bug"] as const;
 export type TaskType = (typeof TASK_TYPES)[number];
+
+export const TASK_PRIORITIES = ["Alta", "Media", "Baja"] as const;
+export type TaskPriority = (typeof TASK_PRIORITIES)[number];
 
 export const TASK_STAGES = ["Por hacer", "En curso", "Pull Request", "Prueba en dev", "Listo en dev", "Listo en prod"] as const;
 export type TaskStage = (typeof TASK_STAGES)[number];
