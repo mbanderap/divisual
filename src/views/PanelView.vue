@@ -1,0 +1,105 @@
+<script setup lang="ts">
+import { computed, onMounted, ref } from "vue";
+import { useCatalogStore } from "../stores/catalogs";
+import { useToastStore } from "../stores/toast";
+import { eur, num } from "../lib/format";
+import { DEAL_STAGES, OPEN_STAGES } from "../lib/types";
+import DealModal from "../components/deals/DealModal.vue";
+
+const catalogs = useCatalogStore();
+const toast = useToastStore();
+const showDealModal = ref(false);
+const loadingStats = ref(true);
+
+onMounted(async () => {
+  try {
+    if (!catalogs.panelStats) await catalogs.loadPanelStats();
+  } catch (e) {
+    toast.error(e, "cargar las estadísticas del panel");
+  } finally {
+    loadingStats.value = false;
+  }
+});
+
+const open = computed(() => catalogs.deals.filter((d) => d.status && OPEN_STAGES.includes(d.status as never)));
+const won = computed(() => catalogs.deals.filter((d) => d.status === "Ganado"));
+const pipeline = computed(() => open.value.reduce((s, d) => s + (d.value || 0), 0));
+const revenue = computed(() => won.value.reduce((s, d) => s + (d.value || 0), 0));
+const byStage = computed(() =>
+  DEAL_STAGES.filter((s) => s !== "Perdido").map((s) => {
+    const ds = catalogs.deals.filter((d) => d.status === s);
+    return { name: s, total: ds.reduce((a, d) => a + (d.value || 0), 0), count: ds.length };
+  }),
+);
+const maxStage = computed(() => Math.max(...byStage.value.map((s) => s.total), 1));
+const devHotels = computed(() => catalogs.panelStats?.devHotels ?? []);
+
+function onDealSaved() {
+  showDealModal.value = false;
+  catalogs.loadCatalogs();
+}
+</script>
+
+<template>
+  <div class="view-head">
+    <div>
+      <h1>Panel</h1>
+      <div class="view-sub">
+        Resumen a {{ new Date().toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" }) }}
+      </div>
+    </div>
+    <button class="btn btn-primary" @click="showDealModal = true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      Nuevo negocio
+    </button>
+  </div>
+
+  <div class="kpis">
+    <div class="card kpi">
+      <div class="k-label">Pipeline abierto</div>
+      <div class="k-value">{{ eur(pipeline) }}</div>
+      <div class="k-delta">{{ open.length }} negocios activos</div>
+    </div>
+    <div class="card kpi">
+      <div class="k-label">Ingresos ganados</div>
+      <div class="k-value">{{ eur(revenue) }}</div>
+      <div class="k-delta">{{ won.length }} negocios cerrados</div>
+    </div>
+    <div class="card kpi">
+      <div class="k-label">Hoteles con plan</div>
+      <div class="k-value">
+        {{ catalogs.counts.hotelsPlan.toLocaleString("es-ES") }}<span style="font-size: 15px; color: var(--faint)">/{{ catalogs.counts.hotels.toLocaleString("es-ES") }}</span>
+      </div>
+      <div class="k-delta">planes de gestión activos</div>
+    </div>
+    <div class="card kpi">
+      <div class="k-label">Contactos</div>
+      <div class="k-value">{{ catalogs.counts.contacts.toLocaleString("es-ES") }}</div>
+      <div class="k-delta">{{ catalogs.counts.contactsCliente.toLocaleString("es-ES") }} son clientes</div>
+    </div>
+  </div>
+
+  <div class="dash-grid">
+    <div class="card panel">
+      <div class="panel-title">Pipeline por etapa <span class="hint">valor y número de negocios</span></div>
+      <div v-for="s in byStage" :key="s.name" class="funnel-row">
+        <span class="f-name">{{ s.name }} <span style="color: var(--faint); font-family: var(--mono); font-size: 11px">{{ s.count }}</span></span>
+        <div class="funnel-track"><div class="funnel-fill" :style="{ width: Math.round((s.total / maxStage) * 100) + '%' }"></div></div>
+        <span class="f-val">{{ eur(s.total) }}</span>
+      </div>
+    </div>
+    <div class="card panel">
+      <div class="panel-title">Desviación de planes <span class="hint">hoteles con mayor desvío</span></div>
+      <div v-if="loadingStats" class="loading">Calculando...</div>
+      <template v-else-if="devHotels.length">
+        <div v-for="h in devHotels" :key="h.id" class="dev-item">
+          <div class="dv-name">{{ h.name }}<div class="dv-days">{{ h.deviation_days != null ? h.deviation_days + " días" : "" }}</div></div>
+          <span class="dv-pct" :class="(h.deviation_pct ?? 0) >= 0 ? 'pos' : 'neg'">{{ (h.deviation_pct ?? 0) >= 0 ? "+" : "" }}{{ num(h.deviation_pct) }}%</span>
+        </div>
+      </template>
+      <div v-else class="empty" style="padding: 24px"><p>Ningún hotel con plan y desviación registrada.</p></div>
+    </div>
+  </div>
+
+  <DealModal v-if="showDealModal" @close="showDealModal = false" @saved="onDealSaved" />
+</template>
