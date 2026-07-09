@@ -10,6 +10,12 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-07-09",
+    title: "Invitar usuarios desde Ajustes",
+    description: "Nueva tarjeta \"Usuarios del equipo\": pones el correo (y nombre opcional) y le llega una invitación para poner su contraseña y entrar al CRM. La creación real la hace una Edge Function de Supabase (supabase/functions/invite-user) con la clave service_role, que nunca toca el navegador.",
+    status: "planned",
+  },
+  {
+    date: "2026-07-09",
     title: "Nuevos KPI de ingresos en el Panel",
     description: "Segunda fila de 4 cuadros: negocios con cierre movido este mes, ingresos estimados este mes (pipeline abierto que cierra este mes), ingresos del mes actual (negocios ganados con servicio activo) e ingresos a futuro (servicio que empieza más adelante). Requiere el trigger de sql/2026-07-09_deals_cambio_fecha_cierre.sql para registrar cuándo cambia la fecha de cierre.",
     status: "done",

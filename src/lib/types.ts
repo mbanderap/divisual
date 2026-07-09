@@ -68,6 +68,8 @@ export interface Deal {
   billing_model: number | null;
   closing_date_prev: string | null;
   closing_date_changed_at: string | null;
+  status_prev: string | null;
+  status_changed_at: string | null;
   contacts?: { id: number; name: string };
   billing_models?: { id: number; name: string };
   deals_hotels?: DealHotelLink[];

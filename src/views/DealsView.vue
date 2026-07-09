@@ -4,10 +4,12 @@ import { useCatalogStore } from "../stores/catalogs";
 import { useSearchStore } from "../stores/search";
 import { useToastStore } from "../stores/toast";
 import { supabase } from "../lib/supabase";
-import { eur, fdate } from "../lib/format";
-import { DEAL_STAGES } from "../lib/types";
+import { eur, fdate, daysSince } from "../lib/format";
+import { DEAL_STAGES, OPEN_STAGES } from "../lib/types";
 import DealModal from "../components/deals/DealModal.vue";
 import type { Deal } from "../lib/types";
+
+const STAGNANT_DAYS = 14;
 
 const catalogs = useCatalogStore();
 const search = useSearchStore();
@@ -25,6 +27,12 @@ const visible = computed(() =>
   }),
 );
 const maxAmount = computed(() => Math.max(...catalogs.deals.map((d) => d.value || 0), 1));
+
+function stagnantDays(d: Deal): number | null {
+  if (!d.status || !OPEN_STAGES.includes(d.status as never)) return null;
+  const days = daysSince(d.status_changed_at);
+  return days != null && days > STAGNANT_DAYS ? days : null;
+}
 
 const showModal = ref(false);
 const editing = ref<Deal | null>(null);
@@ -78,7 +86,7 @@ async function moveDeal(deal: Deal, stage: string) {
         v-for="d in visible.filter((x) => x.status === s)"
         :key="d.id"
         class="deal"
-        :class="{ dragging: draggingId === d.id }"
+        :class="{ dragging: draggingId === d.id, stagnant: stagnantDays(d) != null }"
         draggable="true"
         @dragstart="draggingId = d.id"
         @dragend="draggingId = null"
@@ -90,6 +98,7 @@ async function moveDeal(deal: Deal, stage: string) {
         </div>
         <div class="value-bar"><i :style="{ width: Math.max(6, Math.round(((d.value || 0) / maxAmount) * 100)) + '%' }"></i></div>
         <div class="d-foot"><span class="d-amount">{{ eur(d.value) }}</span><span class="d-date">{{ fdate(d.closing_date) }}</span></div>
+        <div v-if="stagnantDays(d) != null" class="d-stagnant">⏳ {{ stagnantDays(d) }} días sin moverse</div>
       </div>
     </div>
   </div>

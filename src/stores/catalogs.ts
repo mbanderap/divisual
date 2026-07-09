@@ -94,5 +94,14 @@ export const useCatalogStore = defineStore("catalogs", {
       await Promise.all([this.loadCatalogs(), this.loadCounts()]);
       if (this.panelStats) await this.loadPanelStats();
     },
+    async countDeviationAlerts(threshold = 15) {
+      const { data, error } = await supabase
+        .from("hotels")
+        .select("id")
+        .eq("has_plan", true)
+        .or(`deviation_pct.gte.${threshold},deviation_pct.lte.${-threshold}`);
+      if (error) throw new Error(error.message);
+      return data?.length ?? 0;
+    },
   },
 });

@@ -18,6 +18,26 @@ const search = useSearchStore();
 search.register(() => {}, "", "Buscar en el módulo actual");
 onUnmounted(() => search.unregister());
 
+const newUserEmail = ref("");
+const newUserName = ref("");
+const invitingUser = ref(false);
+async function inviteUser() {
+  const email = newUserEmail.value.trim();
+  if (!email) return;
+  invitingUser.value = true;
+  try {
+    const { data, error } = await supabase.functions.invoke("invite-user", {
+      body: { email, name: newUserName.value.trim() || undefined },
+    });
+    if (error) throw error;
+    if (data?.error) throw new Error(data.error);
+    toast.show(`Invitación enviada a ${email}`);
+    newUserEmail.value = "";
+    newUserName.value = "";
+  } catch (e) { toast.error(e, "invitar al usuario"); }
+  finally { invitingUser.value = false; }
+}
+
 const newBillingName = ref("");
 async function addBillingModel() {
   const n = newBillingName.value.trim();
@@ -71,6 +91,19 @@ function exportJson() {
       tags_contacts, deals, billing_models, deals_hotels, hotels, personnel,<br />
       hotels_personnel, personnel_historial
     </div>
+  </div>
+
+  <div class="card setting-block">
+    <h3>Usuarios del equipo</h3>
+    <p class="s-desc">
+      Invita a alguien nuevo por correo: le llega un enlace para poner su contraseña y ya puede entrar al CRM.
+      Requiere la Edge Function <code>invite-user</code> desplegada en Supabase (ver <code>supabase/functions/invite-user</code>).
+    </p>
+    <div class="field-row" style="max-width: 480px">
+      <div class="field"><label>Correo</label><input v-model="newUserEmail" type="email" placeholder="nombre@empresa.com" @keyup.enter="inviteUser" /></div>
+      <div class="field"><label>Nombre (opcional)</label><input v-model="newUserName" type="text" placeholder="Cómo se llama" @keyup.enter="inviteUser" /></div>
+    </div>
+    <button class="btn btn-ghost" :disabled="invitingUser" @click="inviteUser">{{ invitingUser ? "Invitando..." : "Invitar" }}</button>
   </div>
 
   <div class="card setting-block">

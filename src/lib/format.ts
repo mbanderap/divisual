@@ -38,6 +38,11 @@ export function nnum(v: string | number | null | undefined): number | null {
   return Number.isNaN(f) ? null : f;
 }
 
+export function daysSince(iso: string | null | undefined): number | null {
+  if (!iso) return null;
+  return Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+}
+
 export function debounce<A extends unknown[]>(fn: (...args: A) => void, ms = 320): (...args: A) => void {
   let handle: ReturnType<typeof setTimeout>;
   return (...args: A) => {
