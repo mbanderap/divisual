@@ -11,7 +11,7 @@ const catalogs = useCatalogStore();
 const tab = ref<"tecnica" | "eventos" | "vacaciones">("tecnica");
 const TAB_CATEGORIES: Record<string, string[]> = {
   tecnica: ["Despliegue"],
-  eventos: ["Reunión"],
+  eventos: ["Reunión", "Formación", "Visita a hotel"],
   vacaciones: ["Vacaciones", "Teletrabajo"],
 };
 
@@ -83,7 +83,7 @@ function onSaved() { showEventModal.value = false; catalogs.loadCatalogs(); }
     <button class="tab-btn" :class="{ active: tab === 'vacaciones' }" @click="tab = 'vacaciones'">Vacaciones y teletrabajo</button>
   </div>
 
-  <div class="card" style="padding: 16px">
+  <div class="card cal-wrap">
     <MonthCalendar :events="visibleEvents" @day-click="onDayClick" />
   </div>
 

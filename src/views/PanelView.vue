@@ -34,6 +34,31 @@ const byStage = computed(() =>
 const maxStage = computed(() => Math.max(...byStage.value.map((s) => s.total), 1));
 const devHotels = computed(() => catalogs.panelStats?.devHotels ?? []);
 
+function toKey(d: Date): string {
+  return d.toISOString().slice(0, 10);
+}
+const startOfMonth = computed(() => toKey(new Date(new Date().getFullYear(), new Date().getMonth(), 1)));
+const endOfMonth = computed(() => toKey(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0)));
+
+const closingDateChanges = computed(() =>
+  catalogs.deals.filter((d) => d.closing_date_changed_at && d.closing_date_changed_at.slice(0, 10) >= startOfMonth.value).length,
+);
+const estimatedThisMonth = computed(() =>
+  catalogs.deals
+    .filter((d) => d.status && OPEN_STAGES.includes(d.status as never) && d.closing_date && d.closing_date >= startOfMonth.value && d.closing_date <= endOfMonth.value)
+    .reduce((s, d) => s + (d.value || 0), 0),
+);
+const activeThisMonth = computed(() =>
+  catalogs.deals
+    .filter((d) => d.status === "Ganado" && d.start_date && d.start_date <= endOfMonth.value && (!d.end_date || d.end_date >= startOfMonth.value))
+    .reduce((s, d) => s + (d.value || 0), 0),
+);
+const futureRevenue = computed(() =>
+  catalogs.deals
+    .filter((d) => d.status === "Ganado" && d.start_date && d.start_date > endOfMonth.value)
+    .reduce((s, d) => s + (d.value || 0), 0),
+);
+
 function onDealSaved() {
   showDealModal.value = false;
   catalogs.loadCatalogs();
@@ -76,6 +101,29 @@ function onDealSaved() {
       <div class="k-label">Contactos</div>
       <div class="k-value">{{ catalogs.counts.contacts.toLocaleString("es-ES") }}</div>
       <div class="k-delta">{{ catalogs.counts.contactsCliente.toLocaleString("es-ES") }} son clientes</div>
+    </div>
+  </div>
+
+  <div class="kpis" style="margin-top: 14px">
+    <div class="card kpi">
+      <div class="k-label">Cambios en la fecha</div>
+      <div class="k-value">{{ closingDateChanges }}</div>
+      <div class="k-delta">negocios con cierre movido este mes</div>
+    </div>
+    <div class="card kpi">
+      <div class="k-label">Ingresos estimados este mes</div>
+      <div class="k-value">{{ eur(estimatedThisMonth) }}</div>
+      <div class="k-delta">negocios abiertos con cierre este mes</div>
+    </div>
+    <div class="card kpi">
+      <div class="k-label">Ingresos mes actual</div>
+      <div class="k-value">{{ eur(activeThisMonth) }}</div>
+      <div class="k-delta">negocios ganados con servicio activo</div>
+    </div>
+    <div class="card kpi">
+      <div class="k-label">Ingresos mes a futuro</div>
+      <div class="k-value">{{ eur(futureRevenue) }}</div>
+      <div class="k-delta">negocios ganados que empiezan más adelante</div>
     </div>
   </div>
 

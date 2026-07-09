@@ -5,6 +5,7 @@ import { useSearchStore } from "../stores/search";
 import { useToastStore } from "../stores/toast";
 import { supabase } from "../lib/supabase";
 import { statusClass, fdate } from "../lib/format";
+import { rescheduleTaskIfDone } from "../lib/recurrence";
 import { TASK_STAGES } from "../lib/types";
 import TaskModal from "../components/tasks/TaskModal.vue";
 import SprintModal from "../components/tasks/SprintModal.vue";
@@ -69,9 +70,12 @@ async function moveToSprint(task: Task, sprintId: number | null) {
 }
 async function changeStatus(task: Task, status: string) {
   try {
-    const { error } = await supabase.from("tasks").update({ status }).eq("id", task.id);
+    const row = rescheduleTaskIfDone({ ...task, status }, TASK_STAGES[TASK_STAGES.length - 1], TASK_STAGES[0]);
+    const { error } = await supabase.from("tasks").update({ status: row.status, due_date: row.due_date }).eq("id", task.id);
     if (error) throw error;
-    task.status = status;
+    task.status = row.status;
+    task.due_date = row.due_date;
+    if (row.status !== status) toast.show("Tarea recurrente reprogramada para " + fdate(row.due_date));
   } catch (e) { toast.error(e, "cambiar la etapa"); }
 }
 
@@ -102,10 +106,12 @@ function onDrop(stage: string) {
 }
 async function moveTask(task: Task, stage: string) {
   try {
-    const { error } = await supabase.from("tasks").update({ status: stage }).eq("id", task.id);
+    const row = rescheduleTaskIfDone({ ...task, status: stage }, TASK_STAGES[TASK_STAGES.length - 1], TASK_STAGES[0]);
+    const { error } = await supabase.from("tasks").update({ status: row.status, due_date: row.due_date }).eq("id", task.id);
     if (error) throw error;
-    task.status = stage;
-    toast.show("Movido a " + stage);
+    task.status = row.status;
+    task.due_date = row.due_date;
+    toast.show(row.status !== stage ? "Tarea recurrente reprogramada para " + fdate(row.due_date) : "Movido a " + stage);
   } catch (e) { toast.error(e, "mover la tarea"); }
 }
 </script>
@@ -171,7 +177,7 @@ async function moveTask(task: Task, stage: string) {
       >
         <div class="t-top">
           <span class="task-type" :class="statusClass(t.type)">{{ t.type }}</span>
-          <span class="task-id">#{{ t.id }}</span>
+          <span class="task-id">{{ t.recurrence ? "↻ " : "" }}#{{ t.id }}</span>
         </div>
         <div class="t-title">{{ t.title }}</div>
         <div class="t-company">{{ t.stories?.name || "Sin historia" }}</div>

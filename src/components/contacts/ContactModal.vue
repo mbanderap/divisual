@@ -54,6 +54,19 @@ function toggleTag(id: number) {
     : [...selectedTagIds.value, id];
 }
 
+const newTagName = ref("");
+async function createTag() {
+  const n = newTagName.value.trim();
+  if (!n) return;
+  try {
+    const { data, error } = await supabase.from("tags").insert({ name: n }).select("id, name");
+    if (error) throw error;
+    catalogs.tags.push(data[0]);
+    selectedTagIds.value.push(data[0].id);
+    newTagName.value = "";
+  } catch (e) { toast.error(e, "crear la etiqueta"); }
+}
+
 async function save() {
   if (!name.value.trim()) { toast.show("El nombre es obligatorio."); return; }
   saving.value = true;
@@ -125,6 +138,11 @@ async function save() {
         <button v-for="t in catalogs.tags" :key="t.id" type="button" class="chip-btn" :class="{ selected: selectedTagIds.includes(t.id) }" @click="toggleTag(t.id)">
           {{ t.name }}
         </button>
+        <p v-if="!catalogs.tags.length" style="font-size: 12.5px; color: var(--faint)">Sin etiquetas todavía.</p>
+      </div>
+      <div style="display: flex; gap: 8px; margin-top: 8px">
+        <input v-model="newTagName" type="text" placeholder="Nueva etiqueta..." style="flex: 1" @keyup.enter="createTag" />
+        <button class="btn btn-ghost" type="button" @click="createTag">Crear</button>
       </div>
     </div>
 

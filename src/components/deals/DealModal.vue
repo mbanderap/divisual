@@ -6,6 +6,7 @@ import MultiPicker from "../ui/MultiPicker.vue";
 import { supabase } from "../../lib/supabase";
 import { useAuthStore } from "../../stores/auth";
 import { useToastStore } from "../../stores/toast";
+import { useConfirmStore } from "../../stores/confirm";
 import { useCatalogStore } from "../../stores/catalogs";
 import { syncBridge } from "../../lib/syncBridge";
 import { nn, nnum } from "../../lib/format";
@@ -17,6 +18,7 @@ const emit = defineEmits<{ close: []; saved: [] }>();
 
 const auth = useAuthStore();
 const toast = useToastStore();
+const confirm = useConfirmStore();
 const catalogs = useCatalogStore();
 
 const name = ref(props.deal?.name ?? "");
@@ -56,6 +58,18 @@ async function save() {
     emit("saved");
   } catch (e) { toast.error(e, "guardar el negocio"); }
   finally { saving.value = false; }
+}
+
+async function remove() {
+  if (!props.deal) return;
+  const ok = await confirm.ask(`Se eliminará el negocio "${props.deal.name}".`);
+  if (!ok) return;
+  try {
+    const { error } = await supabase.from("deals").delete().eq("id", props.deal.id);
+    if (error) throw error;
+    toast.show("Negocio eliminado");
+    emit("saved");
+  } catch (e) { toast.error(e, "eliminar el negocio"); }
 }
 </script>
 
@@ -109,6 +123,7 @@ async function save() {
       :label-fn="(r: Hotel) => r.name"
     />
     <div class="modal-foot">
+      <button v-if="deal" class="btn btn-danger" style="margin-right: auto" @click="remove">Eliminar</button>
       <button class="btn btn-ghost" @click="emit('close')">Cancelar</button>
       <button class="btn btn-primary" :disabled="saving" @click="save">{{ saving ? "Guardando..." : "Guardar" }}</button>
     </div>

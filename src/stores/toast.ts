@@ -7,6 +7,18 @@ interface ToastItem {
 
 let nextId = 1;
 
+function errorMessage(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  if (typeof err === "string") return err;
+  if (err && typeof err === "object") {
+    const e = err as Record<string, unknown>;
+    if (typeof e.message === "string" && e.message) return e.message;
+    if (typeof e.error_description === "string" && e.error_description) return e.error_description;
+    if (typeof e.details === "string" && e.details) return e.details;
+  }
+  return "error desconocido";
+}
+
 export const useToastStore = defineStore("toast", {
   state: () => ({
     items: [] as ToastItem[],
@@ -20,8 +32,7 @@ export const useToastStore = defineStore("toast", {
       }, duration);
     },
     error(err: unknown, action: string) {
-      const message = err instanceof Error ? err.message : String(err);
-      this.show(`Error al ${action}: ${message}`, 4000);
+      this.show(`Error al ${action}: ${errorMessage(err)}`, 4000);
     },
   },
 });

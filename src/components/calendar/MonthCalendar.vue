@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
+import { recurrenceMatchesDay } from "../../lib/recurrence";
+import type { Recurrence } from "../../lib/recurrence";
 import type { CalendarEvent } from "../../lib/types";
 
 const props = defineProps<{ events: CalendarEvent[] }>();
@@ -14,6 +16,8 @@ function categoryTag(category: string): string {
   if (category === "Despliegue") return "oportunidad";
   if (category === "Reunión") return "cliente";
   if (category === "Vacaciones") return "lead";
+  if (category === "Formación") return "lead";
+  if (category === "Visita a hotel") return "oportunidad";
   return "inactivo"; // Teletrabajo
 }
 
@@ -34,7 +38,10 @@ const gridDays = computed(() => {
 });
 
 function eventsOnDay(key: string): CalendarEvent[] {
-  return props.events.filter((e) => key >= e.start_date && key <= (e.end_date || e.start_date));
+  return props.events.filter((e) => {
+    if (e.recurrence) return recurrenceMatchesDay(key, e.recurrence as Recurrence, e.recurrence_day, e.start_date, e.end_date);
+    return key >= e.start_date && key <= (e.end_date || e.start_date);
+  });
 }
 function isCurrentMonth(d: Date): boolean {
   return d.getMonth() === current.value.getMonth();
@@ -65,7 +72,7 @@ function goToday() { current.value = new Date(); }
   <div class="cal-grid cal-weekdays">
     <div v-for="w in WEEKDAYS" :key="w" class="cal-weekday">{{ w }}</div>
   </div>
-  <div class="cal-grid">
+  <div class="cal-grid cal-days">
     <div
       v-for="d in gridDays"
       :key="dateKey(d)"
@@ -75,8 +82,8 @@ function goToday() { current.value = new Date(); }
     >
       <div class="cal-daynum">{{ d.getDate() }}</div>
       <div class="cal-pills">
-        <span v-for="e in eventsOnDay(dateKey(d)).slice(0, 3)" :key="e.id" class="tag cal-pill" :class="categoryTag(e.category)">{{ e.title }}</span>
-        <span v-if="eventsOnDay(dateKey(d)).length > 3" class="cal-more">+{{ eventsOnDay(dateKey(d)).length - 3 }} más</span>
+        <span v-for="e in eventsOnDay(dateKey(d)).slice(0, 4)" :key="e.id" class="tag cal-pill" :class="categoryTag(e.category)">{{ e.recurrence ? "↻ " : "" }}{{ e.title }}</span>
+        <span v-if="eventsOnDay(dateKey(d)).length > 4" class="cal-more">+{{ eventsOnDay(dateKey(d)).length - 4 }} más</span>
       </div>
     </div>
   </div>

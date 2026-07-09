@@ -2,6 +2,7 @@
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import Modal from "../ui/Modal.vue";
 import MultiPicker from "../ui/MultiPicker.vue";
+import RecurrencePicker from "../ui/RecurrencePicker.vue";
 import { supabase } from "../../lib/supabase";
 import { useAuthStore } from "../../stores/auth";
 import { useToastStore } from "../../stores/toast";
@@ -10,6 +11,8 @@ import { useCatalogStore } from "../../stores/catalogs";
 import { syncBridge } from "../../lib/syncBridge";
 import { nn, fdate } from "../../lib/format";
 import { ICONS } from "../../lib/icons";
+import { rescheduleTaskIfDone } from "../../lib/recurrence";
+import type { Recurrence } from "../../lib/recurrence";
 import { TASK_TYPES, TASK_STAGES, TASK_PRIORITIES } from "../../lib/types";
 import type { Task, TaskComment, TaskSubitem, TaskAttachment, Personnel } from "../../lib/types";
 
@@ -28,6 +31,8 @@ const status = ref(props.task?.status ?? "Por hacer");
 const priority = ref(props.task?.priority ?? "Media");
 const dueDate = ref(props.task?.due_date ?? "");
 const sprintId = ref<number | null>(props.task?.sprint_id ?? null);
+const recurrence = ref<Recurrence | null>((props.task?.recurrence as Recurrence) ?? null);
+const recurrenceDay = ref<number | null>(props.task?.recurrence_day ?? null);
 const assignees = ref(
   (props.task?.tasks_personnel ?? []).map((tp) => ({ id: tp.personnel!.id, label: tp.personnel!.name })).filter((x) => x.id),
 );
@@ -196,13 +201,17 @@ async function removeAttachment(a: TaskAttachment) {
 
 async function save() {
   if (!title.value.trim()) { toast.show("El título es obligatorio."); return; }
+  if (recurrence.value && recurrenceDay.value == null) { toast.show("Elige el día de la repetición."); return; }
   saving.value = true;
   try {
-    const row = {
+    const draft = {
       title: title.value.trim(), description: nn(description.value), type: type.value, status: status.value,
       priority: priority.value, due_date: nn(dueDate.value),
       story_id: storyId.value, sprint_id: sprintId.value,
+      recurrence: recurrence.value, recurrence_day: recurrence.value ? recurrenceDay.value : null,
     };
+    const row = rescheduleTaskIfDone(draft, TASK_STAGES[TASK_STAGES.length - 1], TASK_STAGES[0]);
+    const wasRescheduled = row.status !== draft.status;
     let id = props.task?.id;
     if (props.task) {
       const { error } = await supabase.from("tasks").update(row).eq("id", id);
@@ -214,7 +223,7 @@ async function save() {
     }
     await syncBridge("tasks_personnel", "task_id", id!, assignees.value.map((p) => ({ task_id: id, personnel_id: p.id })));
     await syncBridge("tasks_labels", "task_id", id!, selectedLabelIds.value.map((lid) => ({ task_id: id, label_id: lid })));
-    toast.show(props.task ? "Tarea actualizada" : "Tarea creada");
+    toast.show(wasRescheduled ? "Tarea recurrente reprogramada" : props.task ? "Tarea actualizada" : "Tarea creada");
     emit("saved");
   } catch (e) { toast.error(e, "guardar la tarea"); }
   finally { saving.value = false; }
@@ -284,6 +293,12 @@ async function remove() {
         </select>
       </div>
     </div>
+    <RecurrencePicker
+      :recurrence="recurrence"
+      :day="recurrenceDay"
+      @update:recurrence="recurrence = $event"
+      @update:day="recurrenceDay = $event"
+    />
     <div class="field"><label>Descripción</label><textarea v-model="description" placeholder="Detalle de la tarea o del bug"></textarea></div>
     <MultiPicker
       v-model="assignees"

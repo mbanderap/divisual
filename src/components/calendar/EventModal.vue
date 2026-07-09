@@ -2,12 +2,14 @@
 import { ref } from "vue";
 import Modal from "../ui/Modal.vue";
 import MultiPicker from "../ui/MultiPicker.vue";
+import RecurrencePicker from "../ui/RecurrencePicker.vue";
 import { supabase } from "../../lib/supabase";
 import { useToastStore } from "../../stores/toast";
 import { useConfirmStore } from "../../stores/confirm";
 import { syncBridge } from "../../lib/syncBridge";
 import { nn } from "../../lib/format";
 import { EVENT_CATEGORIES } from "../../lib/types";
+import type { Recurrence } from "../../lib/recurrence";
 import type { CalendarEvent, Personnel } from "../../lib/types";
 
 const props = defineProps<{ event?: CalendarEvent | null; defaultDate?: string; defaultCategory?: string }>();
@@ -21,6 +23,8 @@ const category = ref(props.event?.category ?? props.defaultCategory ?? EVENT_CAT
 const startDate = ref(props.event?.start_date ?? props.defaultDate ?? "");
 const endDate = ref(props.event?.end_date ?? "");
 const description = ref(props.event?.description ?? "");
+const recurrence = ref<Recurrence | null>((props.event?.recurrence as Recurrence) ?? null);
+const recurrenceDay = ref<number | null>(props.event?.recurrence_day ?? null);
 const linkedPeople = ref(
   (props.event?.events_personnel ?? []).map((l) => ({ id: l.personnel!.id, label: l.personnel!.name })).filter((x) => x.id),
 );
@@ -29,12 +33,14 @@ const saving = ref(false);
 async function save() {
   if (!title.value.trim()) { toast.show("El título es obligatorio."); return; }
   if (!startDate.value) { toast.show("La fecha de inicio es obligatoria."); return; }
+  if (recurrence.value && recurrenceDay.value == null) { toast.show("Elige el día de la repetición."); return; }
   saving.value = true;
   try {
     const row = {
       title: title.value.trim(), category: category.value,
       start_date: startDate.value, end_date: nn(endDate.value),
       description: nn(description.value),
+      recurrence: recurrence.value, recurrence_day: recurrence.value ? recurrenceDay.value : null,
     };
     let id = props.event?.id;
     if (props.event) {
@@ -77,8 +83,17 @@ async function remove() {
     </div>
     <div class="field-row">
       <div class="field"><label>Fecha de inicio</label><input v-model="startDate" type="date" /></div>
-      <div class="field"><label>Fecha de fin (opcional)</label><input v-model="endDate" type="date" /></div>
+      <div class="field">
+        <label>{{ recurrence ? "Repetir hasta (opcional)" : "Fecha de fin (opcional)" }}</label>
+        <input v-model="endDate" type="date" />
+      </div>
     </div>
+    <RecurrencePicker
+      :recurrence="recurrence"
+      :day="recurrenceDay"
+      @update:recurrence="recurrence = $event"
+      @update:day="recurrenceDay = $event"
+    />
     <div class="field"><label>Descripción</label><textarea v-model="description" placeholder="Detalles del evento"></textarea></div>
     <MultiPicker
       v-model="linkedPeople"

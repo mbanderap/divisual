@@ -5,6 +5,8 @@ import Sidebar from "./Sidebar.vue";
 import Topbar from "./Topbar.vue";
 import { useCatalogStore } from "../../stores/catalogs";
 
+const WIDE_VIEWS = ["negocios", "tickets", "tablero", "cartera", "chat", "calendario", "hoteles", "contactos", "empresas", "personal"];
+
 const catalogs = useCatalogStore();
 const route = useRoute();
 onMounted(async () => {
@@ -17,7 +19,7 @@ onMounted(async () => {
     <Sidebar />
     <div class="main">
       <Topbar />
-      <div class="content"><div class="view" :class="{ 'view-wide': route.name === 'negocios' || route.name === 'tickets' || route.name === 'tablero' || route.name === 'cartera' || route.name === 'chat' || route.name === 'calendario' }"><router-view /></div></div>
+      <div class="content"><div class="view" :class="{ 'view-wide': WIDE_VIEWS.includes(String(route.name)) }"><router-view /></div></div>
     </div>
   </div>
 </template>

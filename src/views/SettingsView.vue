@@ -3,13 +3,17 @@ import { onUnmounted, ref } from "vue";
 import { useAuthStore } from "../stores/auth";
 import { useCatalogStore } from "../stores/catalogs";
 import { useToastStore } from "../stores/toast";
+import { useConfirmStore } from "../stores/confirm";
 import { useSearchStore } from "../stores/search";
 import { supabase } from "../lib/supabase";
+import { ICONS } from "../lib/icons";
 import CsvImporter from "../components/settings/CsvImporter.vue";
+import type { BillingModel } from "../lib/types";
 
 const auth = useAuthStore();
 const catalogs = useCatalogStore();
 const toast = useToastStore();
+const confirm = useConfirmStore();
 const search = useSearchStore();
 search.register(() => {}, "", "Buscar en el módulo actual");
 onUnmounted(() => search.unregister());
@@ -25,6 +29,17 @@ async function addBillingModel() {
     newBillingName.value = "";
     await catalogs.loadCatalogs();
   } catch (e) { toast.error(e, "añadir el modelo"); }
+}
+
+async function removeBillingModel(b: BillingModel) {
+  const ok = await confirm.ask(`Se eliminará el modelo de facturación "${b.name}".`);
+  if (!ok) return;
+  try {
+    const { error } = await supabase.from("billing_models").delete().eq("id", b.id);
+    if (error) throw error;
+    toast.show("Modelo eliminado");
+    await catalogs.loadCatalogs();
+  } catch (e) { toast.error(e, "eliminar el modelo"); }
 }
 
 function exportJson() {
@@ -70,9 +85,12 @@ function exportJson() {
   <div class="card setting-block">
     <h3>Modelos de facturación</h3>
     <p class="s-desc">Catálogo que se asigna a cada negocio. Añade aquí los modelos con los que trabajas.</p>
-    <div class="chips" style="margin-bottom: 14px">
-      <span v-for="b in catalogs.billing" :key="b.id" class="tag chip" style="font-size: 12px; padding: 5px 12px">{{ b.name }}</span>
-      <span v-if="!catalogs.billing.length" style="font-size: 12.5px; color: var(--faint)">Sin modelos todavía.</span>
+    <div class="multi-list" style="margin-bottom: 14px">
+      <div v-for="b in catalogs.billing" :key="b.id" class="multi-chip">
+        <span>{{ b.name }}</span>
+        <button type="button" title="Eliminar" @click="removeBillingModel(b)" v-html="ICONS.trash"></button>
+      </div>
+      <p v-if="!catalogs.billing.length" style="font-size: 12.5px; color: var(--faint)">Sin modelos todavía.</p>
     </div>
     <div style="display: flex; gap: 8px; max-width: 420px">
       <input v-model="newBillingName" placeholder="Nuevo modelo, p. ej. Por décimas" style="flex: 1; padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); font-size: 13.5px; outline: none" @keyup.enter="addBillingModel" />

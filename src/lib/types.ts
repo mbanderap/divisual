@@ -66,6 +66,8 @@ export interface Deal {
   end_date: string | null;
   contact_id: number | null;
   billing_model: number | null;
+  closing_date_prev: string | null;
+  closing_date_changed_at: string | null;
   contacts?: { id: number; name: string };
   billing_models?: { id: number; name: string };
   deals_hotels?: DealHotelLink[];
@@ -188,6 +190,8 @@ export interface Task {
   due_date: string | null;
   story_id: number | null;
   sprint_id: number | null;
+  recurrence: string | null; // "weekly" | "monthly" | null
+  recurrence_day: number | null; // semanal: 1(Lun)-7(Dom) · mensual: 1-31
   created_at: string;
   stories?: { id: number; name: string };
   sprints?: { id: number; name: string };
@@ -254,12 +258,14 @@ export interface CalendarEvent {
   description: string | null;
   category: string; // "Despliegue" | "Reunión" | "Vacaciones" | "Teletrabajo"
   start_date: string;
-  end_date: string | null;
+  end_date: string | null; // repetición: se usa como "repetir hasta" (opcional)
+  recurrence: string | null; // "weekly" | "monthly" | null
+  recurrence_day: number | null; // semanal: 1(Lun)-7(Dom) · mensual: 1-31
   created_at: string;
   events_personnel?: EventPersonnelLink[];
 }
 
-export const EVENT_CATEGORIES = ["Despliegue", "Reunión", "Vacaciones", "Teletrabajo"] as const;
+export const EVENT_CATEGORIES = ["Despliegue", "Reunión", "Vacaciones", "Teletrabajo", "Formación", "Visita a hotel"] as const;
 export type EventCategory = (typeof EVENT_CATEGORIES)[number];
 
 export interface PagedListState<T> {
