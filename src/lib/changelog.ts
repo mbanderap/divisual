@@ -10,6 +10,18 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-07-09",
+    title: "Mi día",
+    description: "Nueva pantalla (arriba en General): mis tareas abiertas del Tablero, eventos de hoy en el Calendario, tickets urgentes (vencen en 15 días) y negocios por cerrar esta semana, todo junto al abrir la app.",
+    status: "done",
+  },
+  {
+    date: "2026-07-09",
+    title: "Negocios estancados y alertas de desviación",
+    description: "Un negocio abierto que lleva más de 14 días en la misma etapa se marca en Negocios (⏳ y borde de aviso). Al entrar en la app, si algún hotel con plan se ha desviado más de un 15%, sale un aviso. Requiere sql/2026-07-09_deals_cambio_etapa.sql para el histórico de etapa.",
+    status: "planned",
+  },
+  {
+    date: "2026-07-09",
     title: "Invitar usuarios desde Ajustes",
     description: "Nueva tarjeta \"Usuarios del equipo\": pones el correo (y nombre opcional) y le llega una invitación para poner su contraseña y entrar al CRM. La creación real la hace una Edge Function de Supabase (supabase/functions/invite-user) con la clave service_role, que nunca toca el navegador.",
     status: "planned",
