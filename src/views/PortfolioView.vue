@@ -54,6 +54,17 @@ function tenthTrend(h: Hotel): "up" | "down" | "flat" | null {
   if (h.current_ij < h.last_known_tenth) return "down";
   return "flat";
 }
+function openTicketsCount(h: Hotel): number {
+  return catalogs.tickets.filter((t) => t.hotel_id === h.id && t.status !== "Cierre de ciclo").length;
+}
+function riskLevel(h: Hotel): "alto" | "medio" | "bajo" {
+  const dev = Math.abs(h.deviation_days ?? 0);
+  const openT = openTicketsCount(h);
+  if (dev > 150 || openT >= 2) return "alto";
+  if (dev > 60 || openT === 1) return "medio";
+  return "bajo";
+}
+const RISK_LABEL: Record<string, string> = { alto: "Riesgo alto", medio: "Riesgo medio", bajo: "Riesgo bajo" };
 
 const tab = ref<"resumen" | "tickets">("resumen");
 
@@ -172,6 +183,7 @@ const visible = computed(() => {
       <table>
         <thead>
           <tr>
+            <th>Riesgo</th>
             <th>Hotel</th>
             <th>Etapa</th>
             <th>Importe</th>
@@ -183,6 +195,7 @@ const visible = computed(() => {
         </thead>
         <tbody>
           <tr v-for="h in visible" :key="h.id">
+            <td><span class="risk-dot" :class="'risk-' + riskLevel(h)" :title="RISK_LABEL[riskLevel(h)]"></span>{{ RISK_LABEL[riskLevel(h)] }}</td>
             <td>{{ h.name }}</td>
             <td><span class="tag" :class="etapa(h) === 'Mantenimiento' ? 'inactivo' : 'oportunidad'">{{ etapa(h) }}</span></td>
             <td class="num">{{ eur(importe(h)) }}</td>

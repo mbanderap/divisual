@@ -8,6 +8,7 @@ import { useToastStore } from "../stores/toast";
 import { useConfirmStore } from "../stores/confirm";
 import { supabase } from "../lib/supabase";
 import { fdate, num } from "../lib/format";
+import { useDeepLinkFetch } from "../composables/useDeepLinkOpen";
 import DataTable from "../components/ui/DataTable.vue";
 import Pager from "../components/ui/Pager.vue";
 import ViewControls from "../components/ui/ViewControls.vue";
@@ -44,6 +45,7 @@ const showModal = ref(false);
 
 function openNew() { editing.value = null; showModal.value = true; }
 function openEdit(h: Hotel) { editing.value = h; showModal.value = true; }
+useDeepLinkFetch<Hotel>("hotels", "*, hotels_personnel(role, area, personnel(id, name, email)), deals_hotels(id, deals(id, name, value, status))", openEdit);
 function onSaved() { showModal.value = false; fetchPage(); catalogs.loadCounts(); }
 async function onDelete(h: Hotel) {
   const ok = await confirm.ask(`Se eliminará el hotel ${h.name} y sus vínculos con negocios y personal.`);
@@ -59,6 +61,12 @@ function onSort(c: ColumnDef<Hotel>) { if (c.dbCol) setSort(c.dbCol); }
 function progress(h: Hotel) {
   if (!h.objective || h.current_ij == null) return null;
   return Math.min(100, Math.max(0, (h.current_ij / h.objective) * 100));
+}
+const PLAN_ENDING_SOON_DAYS = 30;
+function planEndingSoonDays(h: Hotel): number | null {
+  if (!h.has_plan || !h.plan_end_date) return null;
+  const days = Math.ceil((new Date(h.plan_end_date).getTime() - Date.now()) / 86400000);
+  return days >= 0 && days <= PLAN_ENDING_SOON_DAYS ? days : null;
 }
 </script>
 
@@ -124,6 +132,7 @@ function progress(h: Hotel) {
         </div>
         <div class="co-name">{{ h.name }}<span class="badge" :class="h.has_plan ? 'on' : 'off'">{{ h.has_plan ? "Plan activo" : "Sin plan" }}</span></div>
         <div class="co-sector">{{ (h.hotels_personnel || []).length }} personas asignadas{{ h.plan_end_date ? " · plan hasta " + fdate(h.plan_end_date) : "" }}</div>
+        <div v-if="planEndingSoonDays(h) != null" class="d-soon">📅 el plan vence en {{ planEndingSoonDays(h) }} día{{ planEndingSoonDays(h) === 1 ? "" : "s" }}</div>
         <template v-if="progress(h) != null">
           <div class="plan-bar"><i :style="{ width: Math.round(progress(h)!) + '%' }"></i></div>
           <div class="plan-meta"><span>IJ {{ num(h.current_ij) }}</span><span>objetivo {{ num(h.objective) }}</span></div>

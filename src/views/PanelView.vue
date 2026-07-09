@@ -5,6 +5,7 @@ import { useToastStore } from "../stores/toast";
 import { eur, num } from "../lib/format";
 import { DEAL_STAGES, OPEN_STAGES } from "../lib/types";
 import DealModal from "../components/deals/DealModal.vue";
+import RevenueForecastChart from "../components/panel/RevenueForecastChart.vue";
 
 const catalogs = useCatalogStore();
 const toast = useToastStore();
@@ -58,6 +59,19 @@ const futureRevenue = computed(() =>
     .filter((d) => d.status === "Ganado" && d.start_date && d.start_date > endOfMonth.value)
     .reduce((s, d) => s + (d.value || 0), 0),
 );
+
+const forecastMonths = computed(() => {
+  const now = new Date();
+  return Array.from({ length: 12 }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+    const monthStart = toKey(new Date(d.getFullYear(), d.getMonth(), 1));
+    const monthEnd = toKey(new Date(d.getFullYear(), d.getMonth() + 1, 0));
+    const total = catalogs.deals
+      .filter((deal) => deal.status === "Ganado" && deal.start_date && deal.start_date <= monthEnd && (!deal.end_date || deal.end_date >= monthStart))
+      .reduce((s, deal) => s + (deal.value || 0), 0);
+    return { key: monthStart, label: d.toLocaleDateString("es-ES", { month: "short" }).replace(".", ""), total };
+  });
+});
 
 function onDealSaved() {
   showDealModal.value = false;
@@ -125,6 +139,11 @@ function onDealSaved() {
       <div class="k-value">{{ eur(futureRevenue) }}</div>
       <div class="k-delta">negocios ganados que empiezan más adelante</div>
     </div>
+  </div>
+
+  <div class="card panel" style="margin-bottom: 14px">
+    <div class="panel-title">Forecast de ingresos <span class="hint">negocios ganados, próximos 12 meses</span></div>
+    <RevenueForecastChart :months="forecastMonths" />
   </div>
 
   <div class="dash-grid">

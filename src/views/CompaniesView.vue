@@ -7,6 +7,7 @@ import { useCatalogStore } from "../stores/catalogs";
 import { useToastStore } from "../stores/toast";
 import { useConfirmStore } from "../stores/confirm";
 import { supabase } from "../lib/supabase";
+import { useDeepLinkFetch } from "../composables/useDeepLinkOpen";
 import DataTable from "../components/ui/DataTable.vue";
 import Pager from "../components/ui/Pager.vue";
 import ViewControls from "../components/ui/ViewControls.vue";
@@ -38,6 +39,7 @@ const showModal = ref(false);
 
 function openNew() { editing.value = null; showModal.value = true; }
 function openEdit(c: Company) { editing.value = c; showModal.value = true; }
+useDeepLinkFetch<Company>("companies", "*, contacts_companies(id, contacts(id, name))", openEdit);
 function onSaved() { showModal.value = false; fetchPage(); catalogs.loadCounts(); }
 async function onDelete(c: Company) {
   const ok = await confirm.ask(`Se eliminará la empresa ${c.name} y sus vínculos con contactos.`);

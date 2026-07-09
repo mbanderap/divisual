@@ -124,6 +124,7 @@ async function remove() {
     />
     <div class="modal-foot">
       <button v-if="deal" class="btn btn-danger" style="margin-right: auto" @click="remove">Eliminar</button>
+      <a v-if="deal" class="btn btn-ghost" :href="`/negocios/${deal.id}/propuesta`" target="_blank" rel="noopener">Ver propuesta</a>
       <button class="btn btn-ghost" @click="emit('close')">Cancelar</button>
       <button class="btn btn-primary" :disabled="saving" @click="save">{{ saving ? "Guardando..." : "Guardar" }}</button>
     </div>

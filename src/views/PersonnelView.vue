@@ -5,6 +5,7 @@ import { useSearchStore } from "../stores/search";
 import { useToastStore } from "../stores/toast";
 import { useConfirmStore } from "../stores/confirm";
 import { supabase } from "../lib/supabase";
+import { useDeepLinkOpen } from "../composables/useDeepLinkOpen";
 import Avatar from "../components/ui/Avatar.vue";
 import PersonnelModal from "../components/personnel/PersonnelModal.vue";
 import type { Personnel } from "../lib/types";
@@ -31,6 +32,7 @@ const editing = ref<Personnel | null>(null);
 function openNew() { editing.value = null; showModal.value = true; }
 function openEdit(p: Personnel) { editing.value = p; showModal.value = true; }
 function onSaved() { showModal.value = false; catalogs.loadCatalogs(); }
+useDeepLinkOpen(() => catalogs.personnel, openEdit);
 async function onDelete(p: Personnel) {
   const ok = await confirm.ask(`Se eliminará a ${p.name} y sus asignaciones a hoteles.`);
   if (!ok) return;

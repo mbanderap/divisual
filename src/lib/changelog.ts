@@ -10,6 +10,54 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-07-09",
+    title: "Notificaciones en tiempo real",
+    description: "Aviso al momento (sin recargar) cuando te llega un mensaje nuevo en el Chat o te asignan una tarea en el Tablero. Requiere sql/2026-07-09_realtime_tareas.sql (el Chat ya tenía Realtime activado; esto lo añade para las asignaciones de tareas).",
+    status: "planned",
+  },
+  {
+    date: "2026-07-09",
+    title: "Vista imprimible de propuesta de negocio",
+    description: "Botón \"Ver propuesta\" en la ficha de un negocio: abre una página limpia (sin menú) con los datos del negocio, lista para imprimir o guardar como PDF desde el navegador.",
+    status: "done",
+  },
+  {
+    date: "2026-07-09",
+    title: "Botón de correo en Contactos",
+    description: "Junto al email de un contacto hay un botón que abre tu cliente de correo con el destinatario ya puesto, y lo apunta en el historial del contacto.",
+    status: "done",
+  },
+  {
+    date: "2026-07-09",
+    title: "Forecast de ingresos en el Panel",
+    description: "Gráfico de barras con los ingresos previstos (negocios ganados) de los próximos 12 meses, con detalle al pasar el ratón y una vista en tabla.",
+    status: "done",
+  },
+  {
+    date: "2026-07-09",
+    title: "Detectar duplicados",
+    description: "Nueva herramienta en Ajustes: busca contactos con el mismo correo y empresas con el mismo nombre, y enlaza a cada ficha para revisarlas y fusionarlas a mano.",
+    status: "done",
+  },
+  {
+    date: "2026-07-09",
+    title: "Semáforo de riesgo en Cartera activa",
+    description: "La pestaña \"Tickets activos\" muestra un nivel de riesgo (alto/medio/bajo) por hotel, combinando la desviación del plan con los tickets abiertos.",
+    status: "done",
+  },
+  {
+    date: "2026-07-09",
+    title: "\"Vence pronto\" en Negocios y Hoteles",
+    description: "Un negocio abierto con cierre previsto en menos de 15 días, o un hotel con plan que termina en menos de 30, se marca en su tarjeta.",
+    status: "done",
+  },
+  {
+    date: "2026-07-09",
+    title: "Buscador universal (Ctrl/Cmd+K)",
+    description: "Desde cualquier pantalla, Ctrl+K abre un buscador que encuentra contactos, empresas, hoteles, negocios, tareas, tickets y personal, y te lleva directo a la ficha.",
+    status: "done",
+  },
+  {
+    date: "2026-07-09",
     title: "Mi día",
     description: "Nueva pantalla (arriba en General): mis tareas abiertas del Tablero, eventos de hoy en el Calendario, tickets urgentes (vencen en 15 días) y negocios por cerrar esta semana, todo junto al abrir la app.",
     status: "done",

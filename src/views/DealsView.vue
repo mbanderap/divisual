@@ -5,11 +5,13 @@ import { useSearchStore } from "../stores/search";
 import { useToastStore } from "../stores/toast";
 import { supabase } from "../lib/supabase";
 import { eur, fdate, daysSince } from "../lib/format";
+import { useDeepLinkOpen } from "../composables/useDeepLinkOpen";
 import { DEAL_STAGES, OPEN_STAGES } from "../lib/types";
 import DealModal from "../components/deals/DealModal.vue";
 import type { Deal } from "../lib/types";
 
 const STAGNANT_DAYS = 14;
+const CLOSING_SOON_DAYS = 15;
 
 const catalogs = useCatalogStore();
 const search = useSearchStore();
@@ -33,12 +35,18 @@ function stagnantDays(d: Deal): number | null {
   const days = daysSince(d.status_changed_at);
   return days != null && days > STAGNANT_DAYS ? days : null;
 }
+function closingSoonDays(d: Deal): number | null {
+  if (!d.status || !OPEN_STAGES.includes(d.status as never) || !d.closing_date) return null;
+  const days = Math.ceil((new Date(d.closing_date).getTime() - Date.now()) / 86400000);
+  return days >= 0 && days <= CLOSING_SOON_DAYS ? days : null;
+}
 
 const showModal = ref(false);
 const editing = ref<Deal | null>(null);
 function openNew() { editing.value = null; showModal.value = true; }
 function openEdit(d: Deal) { editing.value = d; showModal.value = true; }
 function onSaved() { showModal.value = false; catalogs.loadCatalogs(); }
+useDeepLinkOpen(() => catalogs.deals, openEdit);
 
 const draggingId = ref<number | null>(null);
 const dragOverStage = ref<string | null>(null);
@@ -98,7 +106,8 @@ async function moveDeal(deal: Deal, stage: string) {
         </div>
         <div class="value-bar"><i :style="{ width: Math.max(6, Math.round(((d.value || 0) / maxAmount) * 100)) + '%' }"></i></div>
         <div class="d-foot"><span class="d-amount">{{ eur(d.value) }}</span><span class="d-date">{{ fdate(d.closing_date) }}</span></div>
-        <div v-if="stagnantDays(d) != null" class="d-stagnant">⏳ {{ stagnantDays(d) }} días sin moverse</div>
+        <div v-if="closingSoonDays(d) != null" class="d-soon">📅 cierra en {{ closingSoonDays(d) }} día{{ closingSoonDays(d) === 1 ? "" : "s" }}</div>
+        <div v-else-if="stagnantDays(d) != null" class="d-stagnant">⏳ {{ stagnantDays(d) }} días sin moverse</div>
       </div>
     </div>
   </div>

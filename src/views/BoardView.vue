@@ -6,6 +6,7 @@ import { useToastStore } from "../stores/toast";
 import { supabase } from "../lib/supabase";
 import { statusClass, fdate } from "../lib/format";
 import { rescheduleTaskIfDone } from "../lib/recurrence";
+import { useDeepLinkOpen } from "../composables/useDeepLinkOpen";
 import { TASK_STAGES } from "../lib/types";
 import TaskModal from "../components/tasks/TaskModal.vue";
 import SprintModal from "../components/tasks/SprintModal.vue";
@@ -94,6 +95,7 @@ const editing = ref<Task | null>(null);
 function openNew() { editing.value = null; showModal.value = true; }
 function openEdit(t: Task) { editing.value = t; showModal.value = true; }
 function onSaved() { showModal.value = false; catalogs.loadCatalogs(); }
+useDeepLinkOpen(() => catalogs.tasks, openEdit);
 
 const draggingId = ref<number | null>(null);
 const dragOverStage = ref<string | null>(null);

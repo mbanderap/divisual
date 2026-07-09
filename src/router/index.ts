@@ -5,6 +5,7 @@ const router = createRouter({
   history: createWebHistory(),
   routes: [
     { path: "/login", name: "login", component: () => import("../views/LoginView.vue"), meta: { public: true } },
+    { path: "/negocios/:id/propuesta", name: "propuesta-negocio", component: () => import("../views/DealProposalView.vue") },
     {
       path: "/",
       component: () => import("../components/layout/AppShell.vue"),

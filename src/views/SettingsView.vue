@@ -62,6 +62,44 @@ async function removeBillingModel(b: BillingModel) {
   } catch (e) { toast.error(e, "eliminar el modelo"); }
 }
 
+interface DupItem { id: number; name: string }
+const dupContacts = ref<{ key: string; items: DupItem[] }[]>([]);
+const dupCompanies = ref<{ key: string; items: DupItem[] }[]>([]);
+const checkingDup = ref(false);
+const dupChecked = ref(false);
+
+function normalize(s: string): string {
+  return s.trim().toLowerCase();
+}
+function groupDuplicates<T>(items: T[], keyFn: (item: T) => string): { key: string; items: T[] }[] {
+  const groups = new Map<string, T[]>();
+  for (const item of items) {
+    const k = keyFn(item);
+    if (!k) continue;
+    if (!groups.has(k)) groups.set(k, []);
+    groups.get(k)!.push(item);
+  }
+  return [...groups.entries()].filter(([, list]) => list.length > 1).map(([key, list]) => ({ key, items: list }));
+}
+async function findDuplicates() {
+  checkingDup.value = true;
+  try {
+    const [contactsRes, companiesRes] = await Promise.all([
+      supabase.from("contacts").select("id, name, email"),
+      supabase.from("companies").select("id, name"),
+    ]);
+    if (contactsRes.error) throw contactsRes.error;
+    if (companiesRes.error) throw companiesRes.error;
+    dupContacts.value = groupDuplicates(
+      contactsRes.data ?? [],
+      (c: { email: string | null; name: string }) => normalize(c.email || c.name),
+    );
+    dupCompanies.value = groupDuplicates(companiesRes.data ?? [], (c: { name: string }) => normalize(c.name));
+    dupChecked.value = true;
+  } catch (e) { toast.error(e, "buscar duplicados"); }
+  finally { checkingDup.value = false; }
+}
+
 function exportJson() {
   const blob = new Blob(
     [JSON.stringify({ deals: catalogs.deals, personnel: catalogs.personnel, tags: catalogs.tags, billing_models: catalogs.billing }, null, 2)],
@@ -129,6 +167,29 @@ function exportJson() {
       <input v-model="newBillingName" placeholder="Nuevo modelo, p. ej. Por décimas" style="flex: 1; padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); font-size: 13.5px; outline: none" @keyup.enter="addBillingModel" />
       <button class="btn btn-ghost" @click="addBillingModel">Añadir</button>
     </div>
+  </div>
+
+  <div class="card setting-block">
+    <h3>Detectar duplicados</h3>
+    <p class="s-desc">Busca contactos con el mismo correo y empresas con el mismo nombre, para revisarlos y fusionarlos a mano.</p>
+    <button class="btn btn-ghost" :disabled="checkingDup" @click="findDuplicates">{{ checkingDup ? "Buscando..." : "Buscar duplicados" }}</button>
+    <template v-if="dupChecked">
+      <p v-if="!dupContacts.length && !dupCompanies.length" style="margin-top: 14px; font-size: 12.5px; color: var(--faint)">No se encontraron duplicados.</p>
+      <template v-else>
+        <template v-if="dupContacts.length">
+          <div class="panel-title" style="margin: 16px 0 8px">Contactos <span class="hint">{{ dupContacts.length }} grupos</span></div>
+          <div v-for="g in dupContacts" :key="g.key" style="border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; display: flex; flex-wrap: wrap; gap: 6px">
+            <router-link v-for="c in g.items" :key="c.id" class="chip-btn" :to="{ name: 'contactos', query: { open: c.id } }">{{ c.name }}</router-link>
+          </div>
+        </template>
+        <template v-if="dupCompanies.length">
+          <div class="panel-title" style="margin: 16px 0 8px">Empresas <span class="hint">{{ dupCompanies.length }} grupos</span></div>
+          <div v-for="g in dupCompanies" :key="g.key" style="border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; display: flex; flex-wrap: wrap; gap: 6px">
+            <router-link v-for="c in g.items" :key="c.id" class="chip-btn" :to="{ name: 'empresas', query: { open: c.id } }">{{ c.name }}</router-link>
+          </div>
+        </template>
+      </template>
+    </template>
   </div>
 
   <div class="card setting-block">

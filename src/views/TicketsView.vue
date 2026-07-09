@@ -5,6 +5,7 @@ import { useSearchStore } from "../stores/search";
 import { useToastStore } from "../stores/toast";
 import { supabase } from "../lib/supabase";
 import { fdate } from "../lib/format";
+import { useDeepLinkOpen } from "../composables/useDeepLinkOpen";
 import { TICKET_STAGES } from "../lib/types";
 import TicketModal from "../components/tickets/TicketModal.vue";
 import type { Ticket } from "../lib/types";
@@ -30,6 +31,7 @@ const editing = ref<Ticket | null>(null);
 function openNew() { editing.value = null; showModal.value = true; }
 function openEdit(t: Ticket) { editing.value = t; showModal.value = true; }
 function onSaved() { showModal.value = false; catalogs.loadCatalogs(); }
+useDeepLinkOpen(() => catalogs.tickets, openEdit);
 
 const draggingId = ref<number | null>(null);
 const dragOverStage = ref<string | null>(null);

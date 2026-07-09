@@ -67,6 +67,15 @@ async function createTag() {
   } catch (e) { toast.error(e, "crear la etiqueta"); }
 }
 
+function sendEmail() {
+  if (!props.contact || !email.value) return;
+  supabase.from("contacts_historial").insert({
+    contact_id: props.contact.id,
+    created_by: auth.session?.user.id,
+    note: "Correo enviado (abierto en el cliente de correo)",
+  });
+}
+
 async function save() {
   if (!name.value.trim()) { toast.show("El nombre es obligatorio."); return; }
   saving.value = true;
@@ -113,7 +122,19 @@ async function save() {
       <input v-model="name" type="text" placeholder="Nombre y apellidos" />
     </div>
     <div class="field-row">
-      <div class="field"><label>Correo electrónico</label><input v-model="email" type="email" placeholder="nombre@empresa.com" /></div>
+      <div class="field">
+        <label>Correo electrónico</label>
+        <div style="display: flex; gap: 8px">
+          <input v-model="email" type="email" placeholder="nombre@empresa.com" style="flex: 1" />
+          <a
+            v-if="contact && email"
+            class="btn btn-ghost"
+            :href="`mailto:${email}`"
+            title="Enviar correo"
+            @click="sendEmail"
+          >✉</a>
+        </div>
+      </div>
       <div class="field"><label>Teléfono</label><input v-model="phone" type="text" placeholder="+34 600 000 000" /></div>
     </div>
     <div class="field-row">

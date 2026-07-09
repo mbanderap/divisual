@@ -8,6 +8,7 @@ import { useToastStore } from "../stores/toast";
 import { useConfirmStore } from "../stores/confirm";
 import { supabase } from "../lib/supabase";
 import { fdate, statusClass } from "../lib/format";
+import { useDeepLinkFetch } from "../composables/useDeepLinkOpen";
 import DataTable from "../components/ui/DataTable.vue";
 import Pager from "../components/ui/Pager.vue";
 import ViewControls from "../components/ui/ViewControls.vue";
@@ -46,6 +47,7 @@ const newTagName = ref("");
 
 function openNew() { editing.value = null; showModal.value = true; }
 function openEdit(c: Contact) { editing.value = c; showModal.value = true; }
+useDeepLinkFetch<Contact>("contacts", "*, contacts_companies(id, role, companies(id, name)), tags_contacts(id, tags(id, name))", openEdit);
 function onSaved() {
   showModal.value = false;
   fetchPage();
