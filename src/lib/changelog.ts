@@ -10,8 +10,14 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-07-09",
+    title: "Esquema SQL consolidado en un solo archivo",
+    description: "Todos los sql/*.sql anteriores (10 archivos sueltos, más las tablas base que nunca estaban en el repo) se han unido en sql/2026-07-09_schema_completo.sql: crea toda la base de datos desde cero, en el estado final que espera la app. Pensado para borrar y rehacer la base de datos.",
+    status: "planned",
+  },
+  {
+    date: "2026-07-09",
     title: "Notificaciones en tiempo real",
-    description: "Aviso al momento (sin recargar) cuando te llega un mensaje nuevo en el Chat o te asignan una tarea en el Tablero. Requiere sql/2026-07-09_realtime_tareas.sql (el Chat ya tenía Realtime activado; esto lo añade para las asignaciones de tareas).",
+    description: "Aviso al momento (sin recargar) cuando te llega un mensaje nuevo en el Chat o te asignan una tarea en el Tablero. Requiere sql/2026-07-09_schema_completo.sql (el Chat ya tenía Realtime activado; ese archivo añade la parte que falta para las asignaciones de tareas).",
     status: "planned",
   },
   {
@@ -65,7 +71,7 @@ export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-07-09",
     title: "Negocios estancados y alertas de desviación",
-    description: "Un negocio abierto que lleva más de 14 días en la misma etapa se marca en Negocios (⏳ y borde de aviso). Al entrar en la app, si algún hotel con plan se ha desviado más de un 15%, sale un aviso. Requiere sql/2026-07-09_deals_cambio_etapa.sql para el histórico de etapa.",
+    description: "Un negocio abierto que lleva más de 14 días en la misma etapa se marca en Negocios (⏳ y borde de aviso). Al entrar en la app, si algún hotel con plan se ha desviado más de un 15%, sale un aviso. Requiere sql/2026-07-09_schema_completo.sql para el histórico de etapa.",
     status: "planned",
   },
   {
@@ -77,7 +83,7 @@ export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-07-09",
     title: "Nuevos KPI de ingresos en el Panel",
-    description: "Segunda fila de 4 cuadros: negocios con cierre movido este mes, ingresos estimados este mes (pipeline abierto que cierra este mes), ingresos del mes actual (negocios ganados con servicio activo) e ingresos a futuro (servicio que empieza más adelante). Requiere el trigger de sql/2026-07-09_deals_cambio_fecha_cierre.sql para registrar cuándo cambia la fecha de cierre.",
+    description: "Segunda fila de 4 cuadros: negocios con cierre movido este mes, ingresos estimados este mes (pipeline abierto que cierra este mes), ingresos del mes actual (negocios ganados con servicio activo) e ingresos a futuro (servicio que empieza más adelante). Requiere el trigger de sql/2026-07-09_schema_completo.sql para registrar cuándo cambia la fecha de cierre.",
     status: "done",
   },
   {
@@ -137,7 +143,7 @@ export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-07-09",
     title: "Ejecutar el SQL de recurrencia en Supabase",
-    description: "Faltan las columnas recurrence y recurrence_day en events y tasks (sql/2026-07-09_recurrencia.sql) para que funcione la repetición.",
+    description: "Faltan las columnas recurrence y recurrence_day en events y tasks (sql/2026-07-09_schema_completo.sql) para que funcione la repetición.",
     status: "planned",
   },
   {
@@ -205,12 +211,6 @@ export const CHANGELOG: ChangelogEntry[] = [
     title: "Ancho de Negocios y fix de despliegue en Vercel",
     description: "El tablero de Negocios ya usa todo el ancho disponible. Se quitó node_modules del repositorio (causaba el fallo de build en Vercel) y se añadió .gitignore.",
     status: "done",
-  },
-  {
-    date: "2026-07-08",
-    title: "Ejecutar el SQL nuevo en Supabase",
-    description: "Crear las tablas de Tickets, Tablero, Cartera activa, Chat y Calendario (ver carpeta sql/) en el proyecto real de Supabase.",
-    status: "planned",
   },
   {
     date: "2026-07-08",
