@@ -94,51 +94,51 @@ function onDealSaved() {
   </div>
 
   <div class="kpis">
-    <div class="card kpi">
+    <router-link class="card kpi kpi-link" :to="{ name: 'negocios' }">
       <div class="k-label">Pipeline abierto</div>
       <div class="k-value">{{ eur(pipeline) }}</div>
       <div class="k-delta">{{ open.length }} negocios activos</div>
-    </div>
-    <div class="card kpi">
-      <div class="k-label">Ingresos ganados</div>
-      <div class="k-value">{{ eur(revenue) }}</div>
-      <div class="k-delta">{{ won.length }} negocios cerrados</div>
-    </div>
-    <div class="card kpi">
+    </router-link>
+    <router-link class="card kpi kpi-link" :to="{ name: 'negocios' }">
+      <div class="k-label">Ingresos mes actual</div>
+      <div class="k-value">{{ eur(activeThisMonth) }}</div>
+      <div class="k-delta">negocios ganados con servicio activo</div>
+    </router-link>
+    <router-link class="card kpi kpi-link" :to="{ name: 'negocios' }">
+      <div class="k-label">Ingresos estimados este mes</div>
+      <div class="k-value">{{ eur(estimatedThisMonth) }}</div>
+      <div class="k-delta">negocios abiertos con cierre este mes</div>
+    </router-link>
+    <router-link class="card kpi kpi-link" :to="{ name: 'negocios' }">
+      <div class="k-label">Ingresos mes a futuro</div>
+      <div class="k-value">{{ eur(futureRevenue) }}</div>
+      <div class="k-delta">negocios ganados que empiezan más adelante</div>
+    </router-link>
+  </div>
+
+  <div class="kpis" style="margin-top: 14px">
+    <router-link class="card kpi kpi-link" :to="{ name: 'negocios' }">
+      <div class="k-label">Cambios en la fecha</div>
+      <div class="k-value">{{ closingDateChanges }}</div>
+      <div class="k-delta">negocios con cierre movido este mes</div>
+    </router-link>
+    <router-link class="card kpi kpi-link" :to="{ name: 'hoteles' }">
       <div class="k-label">Hoteles con plan</div>
       <div class="k-value">
         {{ catalogs.counts.hotelsPlan.toLocaleString("es-ES") }}<span style="font-size: 15px; color: var(--faint)">/{{ catalogs.counts.hotels.toLocaleString("es-ES") }}</span>
       </div>
       <div class="k-delta">planes de gestión activos</div>
-    </div>
-    <div class="card kpi">
+    </router-link>
+    <router-link class="card kpi kpi-link" :to="{ name: 'contactos' }">
       <div class="k-label">Contactos</div>
       <div class="k-value">{{ catalogs.counts.contacts.toLocaleString("es-ES") }}</div>
       <div class="k-delta">{{ catalogs.counts.contactsCliente.toLocaleString("es-ES") }} son clientes</div>
-    </div>
-  </div>
-
-  <div class="kpis" style="margin-top: 14px">
-    <div class="card kpi">
-      <div class="k-label">Cambios en la fecha</div>
-      <div class="k-value">{{ closingDateChanges }}</div>
-      <div class="k-delta">negocios con cierre movido este mes</div>
-    </div>
-    <div class="card kpi">
-      <div class="k-label">Ingresos estimados este mes</div>
-      <div class="k-value">{{ eur(estimatedThisMonth) }}</div>
-      <div class="k-delta">negocios abiertos con cierre este mes</div>
-    </div>
-    <div class="card kpi">
-      <div class="k-label">Ingresos mes actual</div>
-      <div class="k-value">{{ eur(activeThisMonth) }}</div>
-      <div class="k-delta">negocios ganados con servicio activo</div>
-    </div>
-    <div class="card kpi">
-      <div class="k-label">Ingresos mes a futuro</div>
-      <div class="k-value">{{ eur(futureRevenue) }}</div>
-      <div class="k-delta">negocios ganados que empiezan más adelante</div>
-    </div>
+    </router-link>
+    <router-link class="card kpi kpi-link" :to="{ name: 'negocios' }">
+      <div class="k-label">Ingresos ganados</div>
+      <div class="k-value">{{ eur(revenue) }}</div>
+      <div class="k-delta">{{ won.length }} negocios cerrados</div>
+    </router-link>
   </div>
 
   <div class="card panel" style="margin-bottom: 14px">

@@ -12,8 +12,8 @@ onMounted(() => { if (!catalogs.counts.contacts) catalogs.loadCounts(); });
 
 <template>
   <aside class="sidebar">
-    <div class="brand brand-full"><LogoWordmark /></div>
-    <div class="brand brand-compact"><LogoMark :size="26" /></div>
+    <router-link to="/" class="brand brand-full"><LogoWordmark /></router-link>
+    <router-link to="/" class="brand brand-compact"><LogoMark :size="26" /></router-link>
 
     <div class="nav-label">General</div>
     <router-link class="nav-item" to="/">
@@ -58,10 +58,6 @@ onMounted(() => { if (!catalogs.counts.contacts) catalogs.loadCounts(); });
       <svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v14"/><path d="M9 9h1.5M13.5 9H15M9 13h1.5M13.5 13H15M10 21v-3h4v3"/></svg>
       <span>Hoteles</span><span class="count">{{ catalogs.counts.hotels.toLocaleString("es-ES") }}</span>
     </router-link>
-    <router-link class="nav-item" to="/personal">
-      <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.5 3-5.5 6.5-5.5s6.5 2 6.5 5.5"/><circle cx="17" cy="9" r="2.5"/><path d="M17.5 14.5c2.5.4 4 2 4 4.5"/></svg>
-      <span>Personal</span><span class="count">{{ catalogs.personnel.length }}</span>
-    </router-link>
 
     <div class="nav-label">Customer Success</div>
     <router-link class="nav-item" to="/tickets">
@@ -83,6 +79,10 @@ onMounted(() => { if (!catalogs.counts.contacts) catalogs.loadCounts(); });
     <router-link class="nav-item" to="/changelog">
       <svg viewBox="0 0 24 24"><path d="M8 3v4M16 3v4M4 9h16M5 6h14a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1z"/><path d="M8 14l2.5 2.5L16 11"/></svg>
       <span>Changelog</span>
+    </router-link>
+    <router-link class="nav-item" to="/personal">
+      <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.5 3-5.5 6.5-5.5s6.5 2 6.5 5.5"/><circle cx="17" cy="9" r="2.5"/><path d="M17.5 14.5c2.5.4 4 2 4 4.5"/></svg>
+      <span>Usuarios</span><span class="count">{{ catalogs.loggedInPersonnel.length }}</span>
     </router-link>
 
     <div class="sidebar-foot">

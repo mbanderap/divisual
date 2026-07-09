@@ -3,6 +3,7 @@ import { computed } from "vue";
 import { useCatalogStore } from "../stores/catalogs";
 import { useAuthStore } from "../stores/auth";
 import { fdate, eur } from "../lib/format";
+import { ICONS } from "../lib/icons";
 import { todayKey, recurrenceMatchesDay } from "../lib/recurrence";
 import type { Recurrence } from "../lib/recurrence";
 import { OPEN_STAGES, OPEN_TICKET_STAGES } from "../lib/types";
@@ -80,7 +81,7 @@ const closingSoonDeals = computed(() => {
       <p v-if="!todaysEvents.length" style="font-size: 12.5px; color: var(--faint)">Nada programado para hoy.</p>
       <div v-for="e in todaysEvents" :key="e.id" class="hist-item">
         <span class="h-date">{{ e.category }}</span>
-        <span class="h-note"><strong>{{ e.recurrence ? "↻ " : "" }}{{ e.title }}</strong></span>
+        <span class="h-note"><strong><span v-if="e.recurrence" class="icon-inline" v-html="ICONS.repeat"></span>{{ e.title }}</strong></span>
       </div>
       <router-link class="hint" style="display: block; margin-top: 10px" :to="{ name: 'calendario' }">Ver el Calendario →</router-link>
     </div>

@@ -6,8 +6,10 @@
 -- la app hoy.
 --
 -- Cómo usarlo:
---   1. (Opcional, DESTRUCTIVO) Si vas a partir de cero, descomenta y
---      ejecuta primero el PASO 0 para borrar las tablas existentes.
+--   1. (Recomendado) Descomenta y ejecuta primero el PASO 0 para borrar
+--      las tablas existentes — así partes de verdad de cero. Si te
+--      saltas este paso y ya tenías alguna tabla de antes, el PASO 2.5
+--      añade las columnas que le falten sin tocar las que ya tenga.
 --   2. Ejecuta el resto de este archivo completo en Supabase → SQL
 --      Editor → New query → Run.
 --   3. Vuelve a insertar tus datos (los tienes respaldados aparte).
@@ -22,6 +24,11 @@
 --   contacts, companies, contacts_companies, contacts_historial,
 --   personnel_historial, tags, tags_contacts, deals (columnas base),
 --   deals_hotels, hotels (columnas base), personnel, hotels_personnel.
+--
+-- Además incluye `profiles`: una copia mínima (id/email) de auth.users,
+-- mantenida por trigger, porque el navegador no puede leer auth.users
+-- directamente. Es lo que usan Usuarios, el Chat y el filtro por
+-- persona del Calendario para saber quién tiene cuenta de verdad.
 -- =====================================================================
 
 
@@ -31,6 +38,9 @@
 -- las tablas actuales. Si prefieres borrarlas tú a mano desde Supabase,
 -- déjalo comentado y salta directamente al PASO 1.
 -- ---------------------------------------------------------------------
+-- drop table if exists profiles cascade;
+-- drop trigger if exists trg_handle_new_auth_user on auth.users;
+-- drop function if exists handle_new_auth_user();
 -- drop table if exists messages cascade;
 -- drop table if exists tasks_labels cascade;
 -- drop table if exists task_attachments cascade;
@@ -315,6 +325,53 @@ create table if not exists messages (
 
 
 -- ---------------------------------------------------------------------
+-- PASO 2.5 — Red de seguridad: si alguna de estas tablas ya existía de
+-- una ejecución parcial anterior (por ejemplo, no se pasó por el PASO 0
+-- para borrarlo todo primero), "create table if not exists" no la toca
+-- y le pueden faltar columnas que se añadieron más tarde en el
+-- historial original. Esto las añade sin tocar las que ya tenga.
+-- ---------------------------------------------------------------------
+alter table hotels add column if not exists remaining_tenths numeric;
+alter table hotels add column if not exists invoiced boolean not null default false;
+alter table hotels add column if not exists updated_at timestamptz;
+alter table hotels add column if not exists last_known_tenth numeric;
+alter table hotels add column if not exists last_tenth_check_at timestamptz;
+alter table hotels add column if not exists tenth_increased boolean;
+
+alter table tasks add column if not exists priority text;
+alter table tasks add column if not exists due_date date;
+alter table tasks add column if not exists sprint_id bigint references sprints(id) on delete set null;
+alter table tasks add column if not exists recurrence text;
+alter table tasks add column if not exists recurrence_day smallint;
+
+alter table deals add column if not exists closing_date_prev date;
+alter table deals add column if not exists closing_date_changed_at timestamptz;
+alter table deals add column if not exists status_prev text;
+alter table deals add column if not exists status_changed_at timestamptz not null default now();
+
+alter table events add column if not exists recurrence text;
+alter table events add column if not exists recurrence_day smallint;
+
+
+-- ---------------------------------------------------------------------
+-- PASO 2.6 — Usuarios reales (los que pueden iniciar sesión), a partir
+-- de auth.users. El cliente (el navegador) no puede leer auth.users
+-- directamente — ni con RLS — así que se refleja solo lo imprescindible
+-- (id, email, fecha de alta) en esta tabla mediante un trigger, que es
+-- el patrón recomendado por Supabase para esto. Sirve para distinguir,
+-- dentro de `personnel`, quién tiene cuenta de verdad (Usuarios, Chat,
+-- filtro por persona del Calendario) de quién es solo un contacto de
+-- directorio sin acceso a la app.
+-- ---------------------------------------------------------------------
+
+create table if not exists profiles (
+  id         uuid primary key references auth.users(id) on delete cascade,
+  email      text not null,
+  created_at timestamptz not null default now()
+);
+
+
+-- ---------------------------------------------------------------------
 -- PASO 3 — Índices
 -- ---------------------------------------------------------------------
 
@@ -374,7 +431,7 @@ begin
     'tags_contacts', 'hotels_personnel', 'events_personnel',
     'deals', 'deals_hotels', 'tickets', 'tickets_contacts',
     'tasks', 'tasks_personnel', 'task_comments', 'task_subitems',
-    'task_attachments', 'tasks_labels', 'messages'
+    'task_attachments', 'tasks_labels', 'messages', 'profiles'
   ]
   loop
     execute format('alter table %I enable row level security;', t);
@@ -439,6 +496,29 @@ drop trigger if exists trg_contacts_last_update on contacts;
 create trigger trg_contacts_last_update
   before update on contacts
   for each row execute function contacts_touch_last_update();
+
+-- Refleja en profiles quién tiene cuenta real (auth.users), sin exponer
+-- nada más que id/email/fecha de alta. security definer: los triggers
+-- sobre auth.users se ejecutan con el rol interno de Supabase Auth, que
+-- no tiene permiso de escritura en public.profiles por sí mismo.
+create or replace function handle_new_auth_user() returns trigger as $$
+begin
+  insert into profiles (id, email) values (new.id, new.email)
+  on conflict (id) do update set email = excluded.email;
+  return new;
+end;
+$$ language plpgsql security definer set search_path = public;
+
+drop trigger if exists trg_handle_new_auth_user on auth.users;
+create trigger trg_handle_new_auth_user
+  after insert or update of email on auth.users
+  for each row execute function handle_new_auth_user();
+
+-- Rellena profiles con los usuarios que ya existan hoy (no solo los
+-- que se creen a partir de ahora).
+insert into profiles (id, email, created_at)
+select id, email, created_at from auth.users
+on conflict (id) do update set email = excluded.email;
 
 
 -- ---------------------------------------------------------------------

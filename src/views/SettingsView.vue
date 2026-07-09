@@ -8,6 +8,7 @@ import { useSearchStore } from "../stores/search";
 import { supabase } from "../lib/supabase";
 import { ICONS } from "../lib/icons";
 import CsvImporter from "../components/settings/CsvImporter.vue";
+import MergeDuplicatesModal from "../components/settings/MergeDuplicatesModal.vue";
 import type { BillingModel } from "../lib/types";
 
 const auth = useAuthStore();
@@ -62,11 +63,12 @@ async function removeBillingModel(b: BillingModel) {
   } catch (e) { toast.error(e, "eliminar el modelo"); }
 }
 
-interface DupItem { id: number; name: string }
+interface DupItem { id: number; name: string; [key: string]: unknown }
 const dupContacts = ref<{ key: string; items: DupItem[] }[]>([]);
 const dupCompanies = ref<{ key: string; items: DupItem[] }[]>([]);
 const checkingDup = ref(false);
 const dupChecked = ref(false);
+const merging = ref<{ kind: "contacts" | "companies"; items: DupItem[] } | null>(null);
 
 function normalize(s: string): string {
   return s.trim().toLowerCase();
@@ -85,8 +87,8 @@ async function findDuplicates() {
   checkingDup.value = true;
   try {
     const [contactsRes, companiesRes] = await Promise.all([
-      supabase.from("contacts").select("id, name, email"),
-      supabase.from("companies").select("id, name"),
+      supabase.from("contacts").select("id, name, email, phone, lead_status"),
+      supabase.from("companies").select("id, name, phone, category, client"),
     ]);
     if (contactsRes.error) throw contactsRes.error;
     if (companiesRes.error) throw companiesRes.error;
@@ -98,6 +100,11 @@ async function findDuplicates() {
     dupChecked.value = true;
   } catch (e) { toast.error(e, "buscar duplicados"); }
   finally { checkingDup.value = false; }
+}
+async function onMerged() {
+  merging.value = null;
+  await findDuplicates();
+  await catalogs.refreshCatalogsAndCounts();
 }
 
 function exportJson() {
@@ -178,14 +185,20 @@ function exportJson() {
       <template v-else>
         <template v-if="dupContacts.length">
           <div class="panel-title" style="margin: 16px 0 8px">Contactos <span class="hint">{{ dupContacts.length }} grupos</span></div>
-          <div v-for="g in dupContacts" :key="g.key" style="border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; display: flex; flex-wrap: wrap; gap: 6px">
-            <router-link v-for="c in g.items" :key="c.id" class="chip-btn" :to="{ name: 'contactos', query: { open: c.id } }">{{ c.name }}</router-link>
+          <div v-for="g in dupContacts" :key="g.key" style="border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap">
+            <div style="display: flex; flex-wrap: wrap; gap: 6px">
+              <router-link v-for="c in g.items" :key="c.id" class="chip-btn" :to="{ name: 'contactos', query: { open: c.id } }">{{ c.name }}</router-link>
+            </div>
+            <button class="btn btn-ghost" style="flex: none" @click="merging = { kind: 'contacts', items: g.items }">Fusionar</button>
           </div>
         </template>
         <template v-if="dupCompanies.length">
           <div class="panel-title" style="margin: 16px 0 8px">Empresas <span class="hint">{{ dupCompanies.length }} grupos</span></div>
-          <div v-for="g in dupCompanies" :key="g.key" style="border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; display: flex; flex-wrap: wrap; gap: 6px">
-            <router-link v-for="c in g.items" :key="c.id" class="chip-btn" :to="{ name: 'empresas', query: { open: c.id } }">{{ c.name }}</router-link>
+          <div v-for="g in dupCompanies" :key="g.key" style="border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap">
+            <div style="display: flex; flex-wrap: wrap; gap: 6px">
+              <router-link v-for="c in g.items" :key="c.id" class="chip-btn" :to="{ name: 'empresas', query: { open: c.id } }">{{ c.name }}</router-link>
+            </div>
+            <button class="btn btn-ghost" style="flex: none" @click="merging = { kind: 'companies', items: g.items }">Fusionar</button>
           </div>
         </template>
       </template>
@@ -197,4 +210,6 @@ function exportJson() {
     <p class="s-desc">Descarga en JSON los negocios, el personal, las etiquetas y los modelos de facturación cargados.</p>
     <button class="btn btn-ghost" @click="exportJson">Descargar JSON</button>
   </div>
+
+  <MergeDuplicatesModal v-if="merging" :kind="merging.kind" :items="merging.items" @close="merging = null" @merged="onMerged" />
 </template>

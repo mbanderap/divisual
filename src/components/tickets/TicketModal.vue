@@ -5,6 +5,7 @@ import ComboSingle from "../ui/ComboSingle.vue";
 import MultiPicker from "../ui/MultiPicker.vue";
 import { supabase } from "../../lib/supabase";
 import { useToastStore } from "../../stores/toast";
+import { useConfirmStore } from "../../stores/confirm";
 import { syncBridge } from "../../lib/syncBridge";
 import { nn, fdate } from "../../lib/format";
 import { TICKET_STAGES } from "../../lib/types";
@@ -14,6 +15,7 @@ const props = defineProps<{ ticket?: Ticket | null }>();
 const emit = defineEmits<{ close: []; saved: [] }>();
 
 const toast = useToastStore();
+const confirm = useConfirmStore();
 
 const title = ref(props.ticket?.title ?? "");
 const status = ref(props.ticket?.status ?? "Por iniciar");
@@ -48,6 +50,18 @@ async function save() {
     emit("saved");
   } catch (e) { toast.error(e, "guardar el ticket"); }
   finally { saving.value = false; }
+}
+
+async function remove() {
+  if (!props.ticket) return;
+  const ok = await confirm.ask(`Se eliminará el ticket "${props.ticket.title}".`);
+  if (!ok) return;
+  try {
+    const { error } = await supabase.from("tickets").delete().eq("id", props.ticket.id);
+    if (error) throw error;
+    toast.show("Ticket eliminado");
+    emit("saved");
+  } catch (e) { toast.error(e, "eliminar el ticket"); }
 }
 </script>
 
@@ -101,6 +115,7 @@ async function save() {
     />
     <div v-if="ticket" class="field"><label>Creado</label><div class="readonly-value">{{ fdate(ticket.created_at) }}</div></div>
     <div class="modal-foot">
+      <button v-if="ticket" class="btn btn-danger" style="margin-right: auto" @click="remove">Eliminar</button>
       <button class="btn btn-ghost" @click="emit('close')">Cancelar</button>
       <button class="btn btn-primary" :disabled="saving" @click="save">{{ saving ? "Guardando..." : "Guardar" }}</button>
     </div>

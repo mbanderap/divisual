@@ -8,6 +8,7 @@ import { useToastStore } from "../../stores/toast";
 import { useCatalogStore } from "../../stores/catalogs";
 import { syncBridge } from "../../lib/syncBridge";
 import { nn, fdate } from "../../lib/format";
+import { ICONS } from "../../lib/icons";
 import { LEAD_STATUSES } from "../../lib/types";
 import type { Contact, ContactHistorial, Company } from "../../lib/types";
 
@@ -132,7 +133,8 @@ async function save() {
             :href="`mailto:${email}`"
             title="Enviar correo"
             @click="sendEmail"
-          >✉</a>
+            v-html="ICONS.mail"
+          ></a>
         </div>
       </div>
       <div class="field"><label>Teléfono</label><input v-model="phone" type="text" placeholder="+34 600 000 000" /></div>

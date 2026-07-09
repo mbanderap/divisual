@@ -1,5 +1,6 @@
 import { reactive, shallowRef } from "vue";
 import { supabase } from "../lib/supabase";
+import type { FilterDef } from "../lib/types";
 
 export interface EntityMeta {
   table: string;
@@ -14,6 +15,7 @@ interface PagerMeta {
   sortKey: string;
   sortDir: "asc" | "desc";
   search: string;
+  filters: FilterDef[];
   loading: boolean;
 }
 
@@ -37,6 +39,7 @@ export function usePagedEntity<T>(meta: EntityMeta, defaultSortKey: string) {
     sortKey: defaultSortKey,
     sortDir: "asc",
     search: "",
+    filters: [],
     loading: false,
   });
 
@@ -50,6 +53,12 @@ export function usePagedEntity<T>(meta: EntityMeta, defaultSortKey: string) {
         const term = `%${pager.search.replace(/[%,()]/g, "")}%`;
         query = query.or(meta.searchCols.map((c) => `${c}.ilike.${term}`).join(","));
       }
+      for (const f of pager.filters) {
+        if (f.op === "eq") query = query.eq(f.col, f.value);
+        else if (f.op === "gte") query = query.gte(f.col, f.value as string | number);
+        else if (f.op === "lte") query = query.lte(f.col, f.value as string | number);
+        else query = query.is(f.col, f.value as boolean | null);
+      }
       query = query.order(pager.sortKey, { ascending: pager.sortDir === "asc", nullsFirst: false }).range(from, to);
       const { data, error, count } = await query;
       if (error) throw new Error(error.message);
@@ -62,6 +71,11 @@ export function usePagedEntity<T>(meta: EntityMeta, defaultSortKey: string) {
 
   function setSearch(term: string) {
     pager.search = term;
+    pager.page = 1;
+    return fetchPage();
+  }
+  function setFilters(filters: FilterDef[]) {
+    pager.filters = filters;
     pager.page = 1;
     return fetchPage();
   }
@@ -81,5 +95,5 @@ export function usePagedEntity<T>(meta: EntityMeta, defaultSortKey: string) {
     return fetchPage();
   }
 
-  return { rows, pager, fetchPage, setSearch, setSort, setPage, setPageSize };
+  return { rows, pager, fetchPage, setSearch, setFilters, setSort, setPage, setPageSize };
 }

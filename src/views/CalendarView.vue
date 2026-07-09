@@ -61,8 +61,8 @@ function onSaved() { showEventModal.value = false; catalogs.loadCatalogs(); }
           Filtrar por persona{{ filterIds.length ? ` (${filterIds.length})` : "" }}
         </button>
         <div class="combo-drop" :class="{ open: filterOpen }">
-          <div v-if="!catalogs.personnel.length" class="combo-empty">Sin personal todavía</div>
-          <div v-for="p in catalogs.personnel" :key="p.id" class="combo-opt" @click="toggleFilter(p.id)">
+          <div v-if="!catalogs.loggedInPersonnel.length" class="combo-empty">Sin usuarios todavía</div>
+          <div v-for="p in catalogs.loggedInPersonnel" :key="p.id" class="combo-opt" @click="toggleFilter(p.id)">
             <label style="display: flex; align-items: center; gap: 8px; cursor: pointer">
               <input type="checkbox" :checked="filterIds.includes(p.id)" @click.stop="toggleFilter(p.id)" />
               {{ p.name }}
@@ -100,6 +100,7 @@ function onSaved() { showEventModal.value = false; catalogs.loadCatalogs(); }
     :event="editingEvent"
     :default-date="activeDay"
     :default-category="TAB_CATEGORIES[tab][0]"
+    :allowed-categories="TAB_CATEGORIES[tab]"
     @close="showEventModal = false"
     @saved="onSaved"
   />

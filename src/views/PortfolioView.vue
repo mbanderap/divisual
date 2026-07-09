@@ -60,7 +60,7 @@ function openTicketsCount(h: Hotel): number {
 function riskLevel(h: Hotel): "alto" | "medio" | "bajo" {
   const dev = Math.abs(h.deviation_days ?? 0);
   const openT = openTicketsCount(h);
-  if (dev > 150 || openT >= 2) return "alto";
+  if (dev > 90 || openT >= 2) return "alto";
   if (dev > 60 || openT === 1) return "medio";
   return "bajo";
 }
@@ -71,7 +71,7 @@ const tab = ref<"resumen" | "tickets">("resumen");
 // --- Resumen ---
 const ticketsActivos = computed(() => catalogs.tickets.filter((t) => t.status !== "Cierre de ciclo").length);
 const enConsolidacion = computed(() => catalogs.tickets.filter((t) => t.status === "Consolidación").length);
-const enRiesgo = computed(() => rows.value.filter((h) => (h.deviation_days ?? 0) > 150).length);
+const enRiesgo = computed(() => rows.value.filter((h) => (h.deviation_days ?? 0) > 90).length);
 const finPlanRows = computed(() =>
   rows.value
     .filter((h) => h.plan_end_date && diasRestantes(h.plan_end_date) <= 30)
@@ -120,7 +120,7 @@ const visible = computed(() => {
     <div class="kpis-flow">
       <div class="card kpi"><div class="k-label">Tickets activos</div><div class="k-value">{{ ticketsActivos }}</div><div class="k-delta">en pipeline CS</div></div>
       <div class="card kpi"><div class="k-label">En consolidación</div><div class="k-value">{{ enConsolidacion }}</div><div class="k-delta">periodo activo</div></div>
-      <div class="card kpi"><div class="k-label">En riesgo</div><div class="k-value">{{ enRiesgo }}</div><div class="k-delta">desviación &gt;5 meses</div></div>
+      <div class="card kpi"><div class="k-label">En riesgo</div><div class="k-value">{{ enRiesgo }}</div><div class="k-delta">desviación &gt;3 meses</div></div>
       <div class="card kpi"><div class="k-label">Fin plan &lt;30 días</div><div class="k-value">{{ finPlanRows.length }}</div><div class="k-delta">hoteles urgentes</div></div>
       <div class="card kpi"><div class="k-label">Sin importe</div><div class="k-value">{{ sinImporte }}</div><div class="k-delta">tickets incompletos</div></div>
       <div class="card kpi"><div class="k-label">Décima subiendo</div><div class="k-value pos">{{ subiendo }}</div><div class="k-delta">{{ bajando }} bajando</div></div>
@@ -132,7 +132,7 @@ const visible = computed(() => {
       <div class="panel-title">Cambios de estado recientes<span class="hint">últimas actualizaciones de hoteles</span></div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Hotel</th><th>Estado</th><th>Década</th><th>Importe</th><th>Modificado</th></tr></thead>
+          <thead><tr><th>Hotel</th><th>Estado</th><th>Décima</th><th>Importe</th><th>Modificado</th></tr></thead>
           <tbody>
             <tr v-for="h in recentChanges" :key="h.id" :class="{ 'row-highlight': etapa(h) === 'Consolidación' }">
               <td>{{ h.name }}</td>

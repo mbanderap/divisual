@@ -64,7 +64,7 @@ onMounted(async () => {
 });
 onUnmounted(() => { if (channel) supabase.removeChannel(channel); });
 
-const otherPersonnel = computed(() => catalogs.personnel.filter((p) => p.email && p.email !== myEmail.value));
+const otherPersonnel = computed(() => catalogs.loggedInPersonnel.filter((p) => p.email && p.email !== myEmail.value));
 
 const conversations = computed(() => {
   const map = new Map<string, Message>();

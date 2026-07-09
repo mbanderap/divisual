@@ -6,12 +6,15 @@ import { useToastStore } from "../stores/toast";
 import { supabase } from "../lib/supabase";
 import { eur, fdate, daysSince } from "../lib/format";
 import { useDeepLinkOpen } from "../composables/useDeepLinkOpen";
+import { ICONS } from "../lib/icons";
 import { DEAL_STAGES, OPEN_STAGES } from "../lib/types";
 import DealModal from "../components/deals/DealModal.vue";
+import ArchivedDealsModal from "../components/deals/ArchivedDealsModal.vue";
 import type { Deal } from "../lib/types";
 
 const STAGNANT_DAYS = 14;
 const CLOSING_SOON_DAYS = 15;
+const KANBAN_STAGES = DEAL_STAGES.filter((s) => s !== "Perdido");
 
 const catalogs = useCatalogStore();
 const search = useSearchStore();
@@ -43,8 +46,10 @@ function closingSoonDays(d: Deal): number | null {
 
 const showModal = ref(false);
 const editing = ref<Deal | null>(null);
+const showArchived = ref(false);
 function openNew() { editing.value = null; showModal.value = true; }
 function openEdit(d: Deal) { editing.value = d; showModal.value = true; }
+function openFromArchived(d: Deal) { showArchived.value = false; openEdit(d); }
 function onSaved() { showModal.value = false; catalogs.loadCatalogs(); }
 useDeepLinkOpen(() => catalogs.deals, openEdit);
 
@@ -70,15 +75,18 @@ async function moveDeal(deal: Deal, stage: string) {
 <template>
   <div class="view-head">
     <div><h1>Negocios</h1><div class="view-sub">Arrastra las tarjetas entre etapas para actualizar el estado</div></div>
-    <button class="btn btn-primary" @click="openNew">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-      Nuevo negocio
-    </button>
+    <div style="display: flex; gap: 9px">
+      <button class="btn btn-ghost" @click="showArchived = true">Archivados</button>
+      <button class="btn btn-primary" @click="openNew">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        Nuevo negocio
+      </button>
+    </div>
   </div>
 
   <div class="kanban">
     <div
-      v-for="s in DEAL_STAGES"
+      v-for="s in KANBAN_STAGES"
       :key="s"
       class="kcol"
       :class="{ 'drag-over': dragOverStage === s }"
@@ -106,11 +114,12 @@ async function moveDeal(deal: Deal, stage: string) {
         </div>
         <div class="value-bar"><i :style="{ width: Math.max(6, Math.round(((d.value || 0) / maxAmount) * 100)) + '%' }"></i></div>
         <div class="d-foot"><span class="d-amount">{{ eur(d.value) }}</span><span class="d-date">{{ fdate(d.closing_date) }}</span></div>
-        <div v-if="closingSoonDays(d) != null" class="d-soon">📅 cierra en {{ closingSoonDays(d) }} día{{ closingSoonDays(d) === 1 ? "" : "s" }}</div>
-        <div v-else-if="stagnantDays(d) != null" class="d-stagnant">⏳ {{ stagnantDays(d) }} días sin moverse</div>
+        <div v-if="closingSoonDays(d) != null" class="d-soon"><span class="icon-inline" v-html="ICONS.calendar"></span>cierra en {{ closingSoonDays(d) }} día{{ closingSoonDays(d) === 1 ? "" : "s" }}</div>
+        <div v-else-if="stagnantDays(d) != null" class="d-stagnant"><span class="icon-inline" v-html="ICONS.clock"></span>{{ stagnantDays(d) }} días sin moverse</div>
       </div>
     </div>
   </div>
 
   <DealModal v-if="showModal" :deal="editing" @close="showModal = false" @saved="onSaved" />
+  <ArchivedDealsModal v-if="showArchived" @close="showArchived = false" @edit="openFromArchived" />
 </template>

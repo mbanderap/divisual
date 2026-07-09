@@ -33,13 +33,26 @@ function openNew() { editing.value = null; showModal.value = true; }
 function openEdit(p: Personnel) { editing.value = p; showModal.value = true; }
 function onSaved() { showModal.value = false; catalogs.loadCatalogs(); }
 useDeepLinkOpen(() => catalogs.personnel, openEdit);
+function canLogin(p: Personnel): boolean {
+  return catalogs.loggedInPersonnel.some((x) => x.id === p.id);
+}
 async function onDelete(p: Personnel) {
-  const ok = await confirm.ask(`Se eliminará a ${p.name} y sus asignaciones a hoteles.`);
+  const account = catalogs.profiles.find((pr) => pr.email.toLowerCase() === p.email?.toLowerCase());
+  const ok = await confirm.ask(
+    account
+      ? `Se eliminará a ${p.name} y se le quitará el acceso a la app: no podrá volver a iniciar sesión.`
+      : `Se eliminará a ${p.name} y sus asignaciones a hoteles.`,
+  );
   if (!ok) return;
   try {
+    if (account) {
+      const { data, error } = await supabase.functions.invoke("delete-user", { body: { userId: account.id } });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+    }
     const { error } = await supabase.from("personnel").delete().eq("id", p.id);
     if (error) throw error;
-    toast.show("Persona eliminada");
+    toast.show(account ? "Persona y acceso eliminados" : "Persona eliminada");
     catalogs.loadCatalogs();
   } catch (e) { toast.error(e, "eliminar a la persona"); }
 }
@@ -47,7 +60,7 @@ async function onDelete(p: Personnel) {
 
 <template>
   <div class="view-head">
-    <div><h1>Personal</h1><div class="view-sub">{{ rows.length }} personas · las asignaciones a hoteles se gestionan desde la ficha de cada hotel</div></div>
+    <div><h1>Usuarios</h1><div class="view-sub">{{ rows.length }} personas · {{ catalogs.loggedInPersonnel.length }} con cuenta activa · las asignaciones a hoteles se gestionan desde la ficha de cada hotel</div></div>
     <button class="btn btn-primary" @click="openNew">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
       Nueva persona
@@ -56,10 +69,11 @@ async function onDelete(p: Personnel) {
 
   <div class="card table-wrap" v-if="rows.length">
     <table>
-      <thead><tr><th>Persona</th><th>Teléfono</th><th>Hoteles asignados</th><th style="width: 80px"></th></tr></thead>
+      <thead><tr><th>Persona</th><th>Cuenta</th><th>Teléfono</th><th>Hoteles asignados</th><th style="width: 80px"></th></tr></thead>
       <tbody>
         <tr v-for="p in rows" :key="p.id" @click="openEdit(p)">
           <td><div class="cell-person"><Avatar :name="p.name" /><div><div class="p-name">{{ p.name }}</div><div class="p-sub">{{ p.email || "" }}</div></div></div></td>
+          <td><span class="badge" :class="canLogin(p) ? 'on' : 'off'">{{ canLogin(p) ? "Activa" : "Sin cuenta" }}</span></td>
           <td class="num">{{ p.phone || "—" }}</td>
           <td>
             <template v-if="(p.hotels_personnel || []).length">

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
+import { ICONS } from "../../lib/icons";
 import { recurrenceMatchesDay } from "../../lib/recurrence";
 import type { Recurrence } from "../../lib/recurrence";
 import type { CalendarEvent } from "../../lib/types";
@@ -82,7 +83,7 @@ function goToday() { current.value = new Date(); }
     >
       <div class="cal-daynum">{{ d.getDate() }}</div>
       <div class="cal-pills">
-        <span v-for="e in eventsOnDay(dateKey(d)).slice(0, 4)" :key="e.id" class="tag cal-pill" :class="categoryTag(e.category)">{{ e.recurrence ? "↻ " : "" }}{{ e.title }}</span>
+        <span v-for="e in eventsOnDay(dateKey(d)).slice(0, 4)" :key="e.id" class="tag cal-pill" :class="categoryTag(e.category)"><span v-if="e.recurrence" class="icon-inline" v-html="ICONS.repeat"></span>{{ e.title }}</span>
         <span v-if="eventsOnDay(dateKey(d)).length > 4" class="cal-more">+{{ eventsOnDay(dateKey(d)).length - 4 }} más</span>
       </div>
     </div>

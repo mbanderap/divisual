@@ -8,6 +8,9 @@ import { useToastStore } from "../stores/toast";
 import { useConfirmStore } from "../stores/confirm";
 import { supabase } from "../lib/supabase";
 import { fdate, num } from "../lib/format";
+import { ICONS } from "../lib/icons";
+import { fetchAllFiltered } from "../lib/fetchAll";
+import { downloadCsv } from "../lib/csvExport";
 import { useDeepLinkFetch } from "../composables/useDeepLinkOpen";
 import DataTable from "../components/ui/DataTable.vue";
 import Pager from "../components/ui/Pager.vue";
@@ -22,14 +25,39 @@ const catalogs = useCatalogStore();
 const toast = useToastStore();
 const confirm = useConfirmStore();
 
-const { rows, pager, fetchPage, setSearch, setSort, setPage, setPageSize } = usePagedEntity<Hotel>(
-  {
-    table: "hotels",
-    select: "*, hotels_personnel(role, area, personnel(id, name, email)), deals_hotels(id, deals(id, name, value, status))",
-    searchCols: ["name"],
-  },
+const HOTELS_SELECT = "*, hotels_personnel(role, area, personnel(id, name, email)), deals_hotels(id, deals(id, name, value, status))";
+
+const { rows, pager, fetchPage, setSearch, setFilters, setSort, setPage, setPageSize } = usePagedEntity<Hotel>(
+  { table: "hotels", select: HOTELS_SELECT, searchCols: ["name"] },
   "name",
 );
+
+const planFilter = ref("");
+function applyPlanFilter() {
+  setFilters(planFilter.value === "" ? [] : [{ col: "has_plan", op: "eq", value: planFilter.value === "true" }]);
+}
+
+const exporting = ref(false);
+async function exportCsv() {
+  exporting.value = true;
+  try {
+    const all = await fetchAllFiltered<Hotel>("hotels", "*, hotels_personnel(role, area, personnel(id, name))", "name", pager.search, ["name"], pager.filters);
+    const visibleCols = columns.hoteles.filter((c) => c.visible);
+    const csvRows = all.map((h) => {
+      const row: Record<string, unknown> = {};
+      for (const c of visibleCols) {
+        if (c.key === "equipo") row[c.label] = (h.hotels_personnel || []).length;
+        else if (c.key === "has_plan") row[c.label] = h.has_plan ? "Sí" : "No";
+        else if (c.key === "plan_end_date") row[c.label] = fdate(h.plan_end_date);
+        else row[c.label] = (h as unknown as Record<string, unknown>)[c.dbCol ?? c.key];
+      }
+      return row;
+    });
+    downloadCsv(`hoteles-${Date.now()}.csv`, csvRows);
+    toast.show(`${csvRows.length.toLocaleString("es-ES")} hoteles exportados`);
+  } catch (e) { toast.error(e, "exportar el CSV"); }
+  finally { exporting.value = false; }
+}
 
 onMounted(() => {
   search.register(setSearch, pager.search, "Buscar hoteles por nombre");
@@ -45,7 +73,7 @@ const showModal = ref(false);
 
 function openNew() { editing.value = null; showModal.value = true; }
 function openEdit(h: Hotel) { editing.value = h; showModal.value = true; }
-useDeepLinkFetch<Hotel>("hotels", "*, hotels_personnel(role, area, personnel(id, name, email)), deals_hotels(id, deals(id, name, value, status))", openEdit);
+useDeepLinkFetch<Hotel>("hotels", HOTELS_SELECT, openEdit);
 function onSaved() { showModal.value = false; fetchPage(); catalogs.loadCounts(); }
 async function onDelete(h: Hotel) {
   const ok = await confirm.ask(`Se eliminará el hotel ${h.name} y sus vínculos con negocios y personal.`);
@@ -75,11 +103,17 @@ function planEndingSoonDays(h: Hotel): number | null {
     <div>
       <h1>Hoteles</h1>
       <div class="view-sub">
-        {{ pager.total.toLocaleString("es-ES") }} hoteles en total · {{ catalogs.counts.hotelsPlan.toLocaleString("es-ES") }} con plan activo{{ pager.search ? " · resultados filtrados" : "" }}
+        {{ pager.total.toLocaleString("es-ES") }} hoteles en total · {{ catalogs.counts.hotelsPlan.toLocaleString("es-ES") }} con plan activo{{ pager.search || pager.filters.length ? " · resultados filtrados" : "" }}
       </div>
     </div>
     <div style="display: flex; gap: 9px; align-items: center">
+      <select v-model="planFilter" class="filter-select" @change="applyPlanFilter">
+        <option value="">Todos los planes</option>
+        <option value="true">Con plan</option>
+        <option value="false">Sin plan</option>
+      </select>
       <ViewControls v-model:mode="viewMode" @columns="showColEditor = true" />
+      <button class="btn btn-ghost" :disabled="exporting" @click="exportCsv">{{ exporting ? "Exportando..." : "Exportar CSV" }}</button>
       <button class="btn btn-primary" @click="openNew">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
         Nuevo hotel
@@ -132,7 +166,7 @@ function planEndingSoonDays(h: Hotel): number | null {
         </div>
         <div class="co-name">{{ h.name }}<span class="badge" :class="h.has_plan ? 'on' : 'off'">{{ h.has_plan ? "Plan activo" : "Sin plan" }}</span></div>
         <div class="co-sector">{{ (h.hotels_personnel || []).length }} personas asignadas{{ h.plan_end_date ? " · plan hasta " + fdate(h.plan_end_date) : "" }}</div>
-        <div v-if="planEndingSoonDays(h) != null" class="d-soon">📅 el plan vence en {{ planEndingSoonDays(h) }} día{{ planEndingSoonDays(h) === 1 ? "" : "s" }}</div>
+        <div v-if="planEndingSoonDays(h) != null" class="d-soon"><span class="icon-inline" v-html="ICONS.calendar"></span>el plan vence en {{ planEndingSoonDays(h) }} día{{ planEndingSoonDays(h) === 1 ? "" : "s" }}</div>
         <template v-if="progress(h) != null">
           <div class="plan-bar"><i :style="{ width: Math.round(progress(h)!) + '%' }"></i></div>
           <div class="plan-meta"><span>IJ {{ num(h.current_ij) }}</span><span>objetivo {{ num(h.objective) }}</span></div>

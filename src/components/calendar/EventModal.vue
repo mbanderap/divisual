@@ -12,7 +12,7 @@ import { EVENT_CATEGORIES } from "../../lib/types";
 import type { Recurrence } from "../../lib/recurrence";
 import type { CalendarEvent, Personnel } from "../../lib/types";
 
-const props = defineProps<{ event?: CalendarEvent | null; defaultDate?: string; defaultCategory?: string }>();
+const props = defineProps<{ event?: CalendarEvent | null; defaultDate?: string; defaultCategory?: string; allowedCategories?: string[] }>();
 const emit = defineEmits<{ close: []; saved: [] }>();
 
 const toast = useToastStore();
@@ -78,7 +78,7 @@ async function remove() {
     <div class="field-row">
       <div class="field">
         <label>Categoría</label>
-        <select v-model="category"><option v-for="c in EVENT_CATEGORIES" :key="c" :value="c">{{ c }}</option></select>
+        <select v-model="category"><option v-for="c in (allowedCategories ?? EVENT_CATEGORIES)" :key="c" :value="c">{{ c }}</option></select>
       </div>
     </div>
     <div class="field-row">

@@ -44,6 +44,20 @@ async function save() {
       <label>Relación</label>
       <select v-model="client"><option value="true">Cliente</option><option value="false">No cliente</option></select>
     </div>
+
+    <template v-if="company">
+      <h4>Contactos vinculados</h4>
+      <p v-if="!company.contacts_companies?.length" style="font-size: 12.5px; color: var(--faint)">
+        Ningún contacto tiene esta empresa asignada todavía. Se vincula desde la ficha del contacto.
+      </p>
+      <div v-for="cc in company.contacts_companies" :key="cc.id" class="assign-row">
+        <div class="a-main">
+          <router-link :to="{ name: 'contactos', query: { open: cc.contacts!.id } }" style="font-weight: 600; color: var(--accent)">{{ cc.contacts?.name }}</router-link>
+          <div class="a-sub">{{ cc.role || "Sin cargo definido" }}</div>
+        </div>
+      </div>
+    </template>
+
     <div class="modal-foot">
       <button class="btn btn-ghost" @click="emit('close')">Cancelar</button>
       <button class="btn btn-primary" :disabled="saving" @click="save">{{ saving ? "Guardando..." : "Guardar" }}</button>

@@ -5,6 +5,7 @@ import { useSearchStore } from "../stores/search";
 import { useToastStore } from "../stores/toast";
 import { supabase } from "../lib/supabase";
 import { statusClass, fdate } from "../lib/format";
+import { ICONS } from "../lib/icons";
 import { rescheduleTaskIfDone } from "../lib/recurrence";
 import { useDeepLinkOpen } from "../composables/useDeepLinkOpen";
 import { TASK_STAGES } from "../lib/types";
@@ -179,7 +180,7 @@ async function moveTask(task: Task, stage: string) {
       >
         <div class="t-top">
           <span class="task-type" :class="statusClass(t.type)">{{ t.type }}</span>
-          <span class="task-id">{{ t.recurrence ? "↻ " : "" }}#{{ t.id }}</span>
+          <span class="task-id"><span v-if="t.recurrence" class="icon-inline" v-html="ICONS.repeat"></span>#{{ t.id }}</span>
         </div>
         <div class="t-title">{{ t.title }}</div>
         <div class="t-company">{{ t.stories?.name || "Sin historia" }}</div>

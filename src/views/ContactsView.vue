@@ -8,6 +8,8 @@ import { useToastStore } from "../stores/toast";
 import { useConfirmStore } from "../stores/confirm";
 import { supabase } from "../lib/supabase";
 import { fdate, statusClass } from "../lib/format";
+import { fetchAllFiltered } from "../lib/fetchAll";
+import { downloadCsv } from "../lib/csvExport";
 import { useDeepLinkFetch } from "../composables/useDeepLinkOpen";
 import DataTable from "../components/ui/DataTable.vue";
 import Pager from "../components/ui/Pager.vue";
@@ -16,7 +18,10 @@ import ColumnEditor from "../components/ui/ColumnEditor.vue";
 import Avatar from "../components/ui/Avatar.vue";
 import ContactModal from "../components/contacts/ContactModal.vue";
 import Modal from "../components/ui/Modal.vue";
+import { LEAD_STATUSES } from "../lib/types";
 import type { Contact, ColumnDef } from "../lib/types";
+
+const CONTACTS_SELECT = "*, contacts_companies(id, role, companies(id, name)), tags_contacts(id, tags(id, name))";
 
 const search = useSearchStore();
 const columns = useColumnStore();
@@ -24,14 +29,37 @@ const catalogs = useCatalogStore();
 const toast = useToastStore();
 const confirm = useConfirmStore();
 
-const { rows, pager, fetchPage, setSearch, setSort, setPage, setPageSize } = usePagedEntity<Contact>(
-  {
-    table: "contacts",
-    select: "*, contacts_companies(id, role, companies(id, name)), tags_contacts(id, tags(id, name))",
-    searchCols: ["name", "email", "phone"],
-  },
+const { rows, pager, fetchPage, setSearch, setFilters, setSort, setPage, setPageSize } = usePagedEntity<Contact>(
+  { table: "contacts", select: CONTACTS_SELECT, searchCols: ["name", "email", "phone"] },
   "creation_date",
 );
+
+const statusFilter = ref("");
+function applyStatusFilter() {
+  setFilters(statusFilter.value === "" ? [] : [{ col: "lead_status", op: "eq", value: statusFilter.value }]);
+}
+
+const exporting = ref(false);
+async function exportCsv() {
+  exporting.value = true;
+  try {
+    const all = await fetchAllFiltered<Contact>("contacts", CONTACTS_SELECT, "creation_date", pager.search, ["name", "email", "phone"], pager.filters);
+    const visibleCols = columns.contactos.filter((c) => c.visible);
+    const csvRows = all.map((c) => {
+      const row: Record<string, unknown> = {};
+      for (const col of visibleCols) {
+        if (col.key === "empresa") row[col.label] = c.contacts_companies?.[0]?.companies?.name ?? "";
+        else if (col.key === "etiquetas") row[col.label] = (c.tags_contacts || []).map((t) => t.tags?.name).filter(Boolean).join(", ");
+        else if (col.key === "creation_date" || col.key === "last_update") row[col.label] = fdate((c as unknown as Record<string, string | null>)[col.dbCol ?? col.key]);
+        else row[col.label] = (c as unknown as Record<string, unknown>)[col.dbCol ?? col.key];
+      }
+      return row;
+    });
+    downloadCsv(`contactos-${Date.now()}.csv`, csvRows);
+    toast.show(`${csvRows.length.toLocaleString("es-ES")} contactos exportados`);
+  } catch (e) { toast.error(e, "exportar el CSV"); }
+  finally { exporting.value = false; }
+}
 
 onMounted(() => {
   search.register(setSearch, pager.search, "Buscar contactos por nombre, correo o teléfono");
@@ -47,7 +75,7 @@ const newTagName = ref("");
 
 function openNew() { editing.value = null; showModal.value = true; }
 function openEdit(c: Contact) { editing.value = c; showModal.value = true; }
-useDeepLinkFetch<Contact>("contacts", "*, contacts_companies(id, role, companies(id, name)), tags_contacts(id, tags(id, name))", openEdit);
+useDeepLinkFetch<Contact>("contacts", CONTACTS_SELECT, openEdit);
 function onSaved() {
   showModal.value = false;
   fetchPage();
@@ -85,10 +113,15 @@ async function createTag() {
   <div class="view-head">
     <div>
       <h1>Contactos</h1>
-      <div class="view-sub">{{ pager.total.toLocaleString("es-ES") }} contactos en total{{ pager.search ? " · resultados filtrados" : "" }}</div>
+      <div class="view-sub">{{ pager.total.toLocaleString("es-ES") }} contactos en total{{ pager.search || pager.filters.length ? " · resultados filtrados" : "" }}</div>
     </div>
     <div style="display: flex; gap: 9px; align-items: center">
+      <select v-model="statusFilter" class="filter-select" @change="applyStatusFilter">
+        <option value="">Todos los estados</option>
+        <option v-for="s in LEAD_STATUSES" :key="s" :value="s">{{ s }}</option>
+      </select>
       <ViewControls :show-toggle="false" @columns="showColEditor = true" />
+      <button class="btn btn-ghost" :disabled="exporting" @click="exportCsv">{{ exporting ? "Exportando..." : "Exportar CSV" }}</button>
       <button class="btn btn-ghost" @click="showTagModal = true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
         Etiqueta

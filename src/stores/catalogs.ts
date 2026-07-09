@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { supabase } from "../lib/supabase";
 import { fetchAllRows, countRows } from "../lib/fetchAll";
-import type { Deal, Personnel, Tag, BillingModel, Hotel, Ticket, Task, Story, Sprint, TaskLabel, CalendarEvent } from "../lib/types";
+import type { Deal, Personnel, Tag, BillingModel, Hotel, Ticket, Task, Story, Sprint, TaskLabel, CalendarEvent, Profile } from "../lib/types";
 
 interface Counts {
   contacts: number;
@@ -25,6 +25,7 @@ export const useCatalogStore = defineStore("catalogs", {
     labels: [] as TaskLabel[],
     events: [] as CalendarEvent[],
     personnel: [] as Personnel[],
+    profiles: [] as Profile[],
     tags: [] as Tag[],
     billing: [] as BillingModel[],
     counts: { contacts: 0, companies: 0, hotels: 0, hotelsPlan: 0, contactsCliente: 0 } as Counts,
@@ -34,6 +35,9 @@ export const useCatalogStore = defineStore("catalogs", {
     openDealsCount: (state) => state.deals.filter((d) => d.status && ["Prospecto", "Contactado", "Propuesta", "Negociación"].includes(d.status)).length,
     openTicketsCount: (state) => state.tickets.filter((t) => t.status && ["Por iniciar", "Seguimiento activo", "Consolidación", "Décima alcanzada"].includes(t.status)).length,
     openTasksCount: (state) => state.tasks.filter((t) => t.status && t.status !== "Listo en prod").length,
+    // Personal que además tiene cuenta real (auth.users, vía profiles) — los "Usuarios" internos.
+    loggedInPersonnel: (state) =>
+      state.personnel.filter((p) => p.email && state.profiles.some((pr) => pr.email.toLowerCase() === p.email!.toLowerCase())),
   },
   actions: {
     async loadCatalogs() {
@@ -51,8 +55,9 @@ export const useCatalogStore = defineStore("catalogs", {
         fetchAllRows<Personnel>("personnel", "*, hotels_personnel(role, area, hotels(id, name))", "name"),
         fetchAllRows<Tag>("tags", "*", "name"),
         fetchAllRows<BillingModel>("billing_models", "*", "name"),
+        fetchAllRows<Profile>("profiles", "id, email", "email"),
       ]);
-      const [deals, tickets, tasks, stories, sprints, labels, events, personnel, tags, billing] = results.map((r) => (r.status === "fulfilled" ? r.value : []));
+      const [deals, tickets, tasks, stories, sprints, labels, events, personnel, tags, billing, profiles] = results.map((r) => (r.status === "fulfilled" ? r.value : []));
       this.deals = (deals as Deal[]).sort((a, b) => b.id - a.id);
       this.tickets = (tickets as Ticket[]).sort((a, b) => b.id - a.id);
       this.tasks = (tasks as Task[]).sort((a, b) => b.id - a.id);
@@ -63,6 +68,7 @@ export const useCatalogStore = defineStore("catalogs", {
       this.personnel = personnel as Personnel[];
       this.tags = tags as Tag[];
       this.billing = billing as BillingModel[];
+      this.profiles = profiles as Profile[];
     },
     async loadCounts() {
       const [contacts, companies, hotels, hotelsPlan, contactsCliente] = await Promise.all([

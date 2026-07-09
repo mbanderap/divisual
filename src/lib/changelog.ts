@@ -10,6 +10,78 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-07-09",
+    title: "Fusionar duplicados de verdad",
+    description: "En Ajustes, cada grupo de duplicados tiene un botón \"Fusionar\": eliges qué valor de cada campo quieres conservar (o lo escribes tú), y al confirmar se guarda en un único registro, se mueven sus vínculos (empresas, negocios, tickets, etiquetas...) y se borran los duplicados.",
+    status: "done",
+  },
+  {
+    date: "2026-07-09",
+    title: "Eliminar un Usuario ahora revoca el acceso de verdad",
+    description: "Antes, borrar a alguien de Usuarios solo quitaba su ficha; su cuenta seguía activa y podía seguir entrando. Ahora también se elimina su cuenta real. Requiere la Edge Function delete-user desplegada en Supabase.",
+    status: "planned",
+  },
+  {
+    date: "2026-07-09",
+    title: "Negocios perdidos, archivados en vez de columna",
+    description: "Se quitó \"Perdido\" del tablero (ya no hay que verlo entre las etapas activas). Junto a \"Nuevo negocio\" hay un botón \"Archivados\" con los negocios perdidos, por si hay que reabrirlos o borrarlos.",
+    status: "done",
+  },
+  {
+    date: "2026-07-09",
+    title: "Panel: orden nuevo y cuadros accionables",
+    description: "Los 8 cuadros del Panel siguen el orden: pipeline abierto, ingresos mes actual, ingresos estimados este mes, ingresos mes a futuro, cambios en la fecha, hoteles con plan, contactos, ingresos ganados. Y ahora son clicables: te llevan directo al módulo de donde sale ese dato.",
+    status: "done",
+  },
+  {
+    date: "2026-07-09",
+    title: "Sin emojis: iconos SVG en su lugar",
+    description: "Se quitaron los emojis (⏳ 📅 ↻ ✉) de las tarjetas de negocio/hotel, el indicador de recurrencia y el botón de correo, sustituidos por iconos SVG del mismo estilo que el resto de la app.",
+    status: "done",
+  },
+  {
+    date: "2026-07-09",
+    title: "Retoques varios",
+    description: "El umbral de \"en riesgo\" en Cartera activa pasó de 5 a 3 meses de desviación. \"Década\" ahora dice \"Décima\". Los Tickets ya se pueden eliminar desde su ficha, como el resto de entidades.",
+    status: "done",
+  },
+  {
+    date: "2026-07-09",
+    title: "Filtros y exportar a CSV en Contactos, Empresas y Hoteles",
+    description: "Cada vista tiene un desplegable de filtro (estado del lead / relación cliente / plan) que se combina con la búsqueda, y un botón \"Exportar CSV\" que descarga exactamente lo filtrado, solo con las columnas que tengas visibles en \"Columnas\".",
+    status: "done",
+  },
+  {
+    date: "2026-07-09",
+    title: "Arreglo: los contactos vinculados no se veían en la ficha de empresa",
+    description: "La tarjeta de empresa ya mostraba el número de contactos asociados, pero al abrir la ficha no aparecían. Ahora la ficha de empresa lista los contactos vinculados (con su cargo) y enlaza a cada uno.",
+    status: "done",
+  },
+  {
+    date: "2026-07-09",
+    title: "El logo de divisual vuelve al Panel",
+    description: "Al hacer clic en \"divisual\" arriba a la izquierda, ahora te lleva al Panel, como en cualquier app.",
+    status: "done",
+  },
+  {
+    date: "2026-07-09",
+    title: "Usuarios (antes \"Personal\") ligado a cuentas reales",
+    description: "Se renombró Personal a Usuarios y se movió debajo de Changelog. Nueva tabla `profiles`, sincronizada con auth.users por trigger (el navegador no puede leer auth.users directamente), para saber quién tiene cuenta de verdad. El Chat y el filtro por persona del Calendario ya solo muestran usuarios con cuenta, no todo el directorio de Personal.",
+    status: "planned",
+  },
+  {
+    date: "2026-07-09",
+    title: "Categorías del Calendario según la pestaña",
+    description: "Antes se podía crear una \"Reunión\" desde la pestaña Vacaciones. Ahora el desplegable de categoría solo ofrece las que tienen sentido en la pestaña activa (Vista técnica → Despliegue; Eventos → Reunión/Formación/Visita a hotel; Vacaciones y teletrabajo → Vacaciones/Teletrabajo).",
+    status: "done",
+  },
+  {
+    date: "2026-07-09",
+    title: "Arreglo: \"Panel\" siempre aparecía marcado en el menú",
+    description: "El enlace de Panel usaba la clase de \"activo\" no exacta, que en Vue Router coincide con cualquier ruta (porque todas cuelgan de \"/\"). Se cambió a la clase de coincidencia exacta.",
+    status: "done",
+  },
+  {
+    date: "2026-07-09",
     title: "Esquema SQL consolidado en un solo archivo",
     description: "Todos los sql/*.sql anteriores (10 archivos sueltos, más las tablas base que nunca estaban en el repo) se han unido en sql/2026-07-09_schema_completo.sql: crea toda la base de datos desde cero, en el estado final que espera la app. Pensado para borrar y rehacer la base de datos.",
     status: "planned",

@@ -7,6 +7,8 @@ import { useCatalogStore } from "../stores/catalogs";
 import { useToastStore } from "../stores/toast";
 import { useConfirmStore } from "../stores/confirm";
 import { supabase } from "../lib/supabase";
+import { fetchAllFiltered } from "../lib/fetchAll";
+import { downloadCsv } from "../lib/csvExport";
 import { useDeepLinkFetch } from "../composables/useDeepLinkOpen";
 import DataTable from "../components/ui/DataTable.vue";
 import Pager from "../components/ui/Pager.vue";
@@ -15,16 +17,44 @@ import ColumnEditor from "../components/ui/ColumnEditor.vue";
 import CompanyModal from "../components/companies/CompanyModal.vue";
 import type { Company, ColumnDef } from "../lib/types";
 
+const COMPANIES_SELECT = "*, contacts_companies(id, role, contacts(id, name))";
+
 const search = useSearchStore();
 const columns = useColumnStore();
 const catalogs = useCatalogStore();
 const toast = useToastStore();
 const confirm = useConfirmStore();
 
-const { rows, pager, fetchPage, setSearch, setSort, setPage, setPageSize } = usePagedEntity<Company>(
-  { table: "companies", select: "*, contacts_companies(id, contacts(id, name))", searchCols: ["name", "category"] },
+const { rows, pager, fetchPage, setSearch, setFilters, setSort, setPage, setPageSize } = usePagedEntity<Company>(
+  { table: "companies", select: COMPANIES_SELECT, searchCols: ["name", "category"] },
   "name",
 );
+
+const clientFilter = ref("");
+function applyClientFilter() {
+  setFilters(clientFilter.value === "" ? [] : [{ col: "client", op: "eq", value: clientFilter.value === "true" }]);
+}
+
+const exporting = ref(false);
+async function exportCsv() {
+  exporting.value = true;
+  try {
+    const all = await fetchAllFiltered<Company>("companies", COMPANIES_SELECT, "name", pager.search, ["name", "category"], pager.filters);
+    const visibleCols = columns.empresas.filter((c) => c.visible);
+    const csvRows = all.map((c) => {
+      const row: Record<string, unknown> = {};
+      for (const col of visibleCols) {
+        if (col.key === "contactos") row[col.label] = (c.contacts_companies || []).length;
+        else if (col.key === "client") row[col.label] = c.client ? "Cliente" : "No cliente";
+        else row[col.label] = (c as unknown as Record<string, unknown>)[col.dbCol ?? col.key];
+      }
+      return row;
+    });
+    downloadCsv(`empresas-${Date.now()}.csv`, csvRows);
+    toast.show(`${csvRows.length.toLocaleString("es-ES")} empresas exportadas`);
+  } catch (e) { toast.error(e, "exportar el CSV"); }
+  finally { exporting.value = false; }
+}
 
 onMounted(() => {
   search.register(setSearch, pager.search, "Buscar empresas por nombre o categoría");
@@ -39,7 +69,7 @@ const showModal = ref(false);
 
 function openNew() { editing.value = null; showModal.value = true; }
 function openEdit(c: Company) { editing.value = c; showModal.value = true; }
-useDeepLinkFetch<Company>("companies", "*, contacts_companies(id, contacts(id, name))", openEdit);
+useDeepLinkFetch<Company>("companies", COMPANIES_SELECT, openEdit);
 function onSaved() { showModal.value = false; fetchPage(); catalogs.loadCounts(); }
 async function onDelete(c: Company) {
   const ok = await confirm.ask(`Se eliminará la empresa ${c.name} y sus vínculos con contactos.`);
@@ -58,10 +88,16 @@ function onSort(c: ColumnDef<Company>) { if (c.dbCol) setSort(c.dbCol); }
   <div class="view-head">
     <div>
       <h1>Empresas</h1>
-      <div class="view-sub">{{ pager.total.toLocaleString("es-ES") }} cuentas registradas{{ pager.search ? " · resultados filtrados" : "" }}</div>
+      <div class="view-sub">{{ pager.total.toLocaleString("es-ES") }} cuentas registradas{{ pager.search || pager.filters.length ? " · resultados filtrados" : "" }}</div>
     </div>
     <div style="display: flex; gap: 9px; align-items: center">
+      <select v-model="clientFilter" class="filter-select" @change="applyClientFilter">
+        <option value="">Todas las relaciones</option>
+        <option value="true">Cliente</option>
+        <option value="false">No cliente</option>
+      </select>
       <ViewControls v-model:mode="viewMode" @columns="showColEditor = true" />
+      <button class="btn btn-ghost" :disabled="exporting" @click="exportCsv">{{ exporting ? "Exportando..." : "Exportar CSV" }}</button>
       <button class="btn btn-primary" @click="openNew">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
         Nueva empresa

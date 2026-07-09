@@ -7,7 +7,7 @@ export interface Company {
   phone: string | null;
   client: boolean | null;
   category: string | null;
-  contacts_companies?: { id: number; contacts?: { id: number; name: string } }[];
+  contacts_companies?: { id: number; role: string | null; contacts?: { id: number; name: string } }[];
 }
 
 export interface Tag {
@@ -121,6 +121,12 @@ export interface Personnel {
   email: string | null;
   phone: string | null;
   hotels_personnel?: PersonnelHotelLink[];
+}
+
+// Copia mínima de auth.users (id, email) — quién puede iniciar sesión de verdad.
+export interface Profile {
+  id: string;
+  email: string;
 }
 
 export interface TicketContactLink {
@@ -269,6 +275,12 @@ export interface CalendarEvent {
 
 export const EVENT_CATEGORIES = ["Despliegue", "Reunión", "Vacaciones", "Teletrabajo", "Formación", "Visita a hotel"] as const;
 export type EventCategory = (typeof EVENT_CATEGORIES)[number];
+
+export interface FilterDef {
+  col: string;
+  op: "eq" | "gte" | "lte" | "is";
+  value: string | number | boolean | null;
+}
 
 export interface PagedListState<T> {
   rows: T[];
