@@ -6,10 +6,13 @@ const STORAGE_KEY = "divisual-columns-v1";
 function defaultContactColumns(): ColumnDef<Contact>[] {
   return [
     { key: "name", label: "Contacto", visible: true, dbCol: "name" },
+    { key: "last_name", label: "Apellidos", visible: false, dbCol: "last_name" },
     { key: "empresa", label: "Empresa", visible: true },
+    { key: "hotel", label: "Hotel", visible: false },
     { key: "etiquetas", label: "Etiquetas", visible: true },
     { key: "lead_status", label: "Estado", visible: true, dbCol: "lead_status" },
     { key: "phone", label: "Teléfono", visible: false, dbCol: "phone", numeric: true },
+    { key: "mobile_phone", label: "Móvil", visible: false, dbCol: "mobile_phone", numeric: true },
     { key: "email", label: "Correo", visible: false, dbCol: "email" },
     { key: "creation_date", label: "Creado", visible: false, dbCol: "creation_date" },
     { key: "last_update", label: "Actualizado", visible: true, dbCol: "last_update" },
@@ -37,6 +40,18 @@ function defaultHotelColumns(): ColumnDef<Hotel>[] {
     { key: "deviation_pct", label: "Desv. (valor)", visible: false, dbCol: "deviation_pct", numeric: true },
     { key: "plan_end_date", label: "Fin del plan", visible: true, dbCol: "plan_end_date" },
     { key: "equipo", label: "Equipo", visible: false, numeric: true },
+    { key: "num_rooms", label: "Nº habitaciones", visible: false, dbCol: "num_rooms", numeric: true },
+    { key: "adr", label: "ADR", visible: false, dbCol: "adr", numeric: true },
+    { key: "stars", label: "Nº estrellas", visible: false, dbCol: "stars", numeric: true },
+    { key: "category", label: "Categoría", visible: false, dbCol: "category" },
+    { key: "is_chain", label: "Cadena", visible: false, dbCol: "is_chain" },
+    { key: "pms", label: "PMS", visible: false, dbCol: "pms" },
+    { key: "city", label: "Ciudad", visible: false, dbCol: "city" },
+    { key: "postal_code", label: "Código postal", visible: false, dbCol: "postal_code" },
+    { key: "annual_revenue", label: "Ingresos anuales", visible: false, dbCol: "annual_revenue", numeric: true },
+    { key: "timezone", label: "Zona horaria", visible: false, dbCol: "timezone" },
+    { key: "booking_url", label: "URL booking", visible: false, dbCol: "booking_url" },
+    { key: "website_url", label: "Web del hotel", visible: false, dbCol: "website_url" },
   ];
 }
 

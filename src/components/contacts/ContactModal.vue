@@ -10,7 +10,7 @@ import { syncBridge } from "../../lib/syncBridge";
 import { nn, fdate } from "../../lib/format";
 import { ICONS } from "../../lib/icons";
 import { LEAD_STATUSES } from "../../lib/types";
-import type { Contact, ContactHistorial, Company } from "../../lib/types";
+import type { Contact, ContactHistorial, Company, Hotel } from "../../lib/types";
 
 const props = defineProps<{ contact?: Contact | null }>();
 const emit = defineEmits<{ close: []; saved: [] }>();
@@ -20,13 +20,17 @@ const toast = useToastStore();
 const catalogs = useCatalogStore();
 
 const linked = props.contact?.contacts_companies?.[0] ?? null;
+const linkedHotel = props.contact?.hotels_contacts?.[0] ?? null;
 
 const name = ref(props.contact?.name ?? "");
+const lastName = ref(props.contact?.last_name ?? "");
 const email = ref(props.contact?.email ?? "");
 const phone = ref(props.contact?.phone ?? "");
+const mobilePhone = ref(props.contact?.mobile_phone ?? "");
 const leadStatus = ref(props.contact?.lead_status ?? "Lead");
 const role = ref(linked?.role ?? "");
 const companyId = ref<number | null>(linked?.companies?.id ?? null);
+const hotelId = ref<number | null>(linkedHotel?.hotels?.id ?? null);
 const selectedTagIds = ref<number[]>((props.contact?.tags_contacts ?? []).map((t) => t.tags?.id).filter((x): x is number => !!x));
 const note = ref("");
 const saving = ref(false);
@@ -83,8 +87,10 @@ async function save() {
   try {
     const row = {
       name: name.value.trim(),
+      last_name: nn(lastName.value.trim()),
       email: nn(email.value.trim()),
       phone: nn(phone.value.trim()),
+      mobile_phone: nn(mobilePhone.value.trim()),
       lead_status: leadStatus.value,
       created_by: auth.session?.user.id,
     };
@@ -99,6 +105,8 @@ async function save() {
     }
     await syncBridge("contacts_companies", "contact_id", id!,
       companyId.value ? [{ contact_id: id, company_id: companyId.value, role: nn(role.value.trim()) }] : []);
+    await syncBridge("hotels_contacts", "contact_id", id!,
+      hotelId.value ? [{ contact_id: id, hotel_id: hotelId.value }] : []);
     await syncBridge("tags_contacts", "contact_id", id!,
       selectedTagIds.value.map((t) => ({ contact_id: id, tags: t, created_by: auth.session?.user.id })));
     await supabase.from("contacts_historial").insert({
@@ -118,9 +126,9 @@ async function save() {
 <template>
   <Modal @close="emit('close')">
     <h2>{{ contact ? "Editar contacto" : "Nuevo contacto" }}</h2>
-    <div class="field">
-      <label>Nombre completo</label>
-      <input v-model="name" type="text" placeholder="Nombre y apellidos" />
+    <div class="field-row">
+      <div class="field"><label>Nombre</label><input v-model="name" type="text" placeholder="Nombre" /></div>
+      <div class="field"><label>Apellidos</label><input v-model="lastName" type="text" placeholder="Apellidos" /></div>
     </div>
     <div class="field-row">
       <div class="field">
@@ -137,7 +145,10 @@ async function save() {
           ></a>
         </div>
       </div>
-      <div class="field"><label>Teléfono</label><input v-model="phone" type="text" placeholder="+34 600 000 000" /></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Número de teléfono</label><input v-model="phone" type="text" placeholder="+34 900 000 000" /></div>
+      <div class="field"><label>Número de móvil</label><input v-model="mobilePhone" type="text" placeholder="+34 600 000 000" /></div>
     </div>
     <div class="field-row">
       <div class="field">
@@ -154,7 +165,18 @@ async function save() {
         :initial-label="linked?.companies?.name"
       />
     </div>
-    <div class="field"><label>Cargo en la empresa</label><input v-model="role" type="text" placeholder="Puesto que ocupa" /></div>
+    <div class="field-row">
+      <div class="field"><label>Cargo</label><input v-model="role" type="text" placeholder="Puesto que ocupa" /></div>
+      <ComboSingle
+        v-model="hotelId"
+        label="Hotel al que está relacionado"
+        table="hotels"
+        search-col="name"
+        select-cols="id, name"
+        :label-fn="(r: Hotel) => r.name"
+        :initial-label="linkedHotel?.hotels?.name"
+      />
+    </div>
     <div class="field">
       <label>Etiquetas</label>
       <div class="chips">

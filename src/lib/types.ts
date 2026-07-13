@@ -26,16 +26,24 @@ export interface TagLink {
   tags?: { id: number; name: string };
 }
 
+export interface ContactHotelLink {
+  id: number;
+  hotels?: { id: number; name: string };
+}
+
 export interface Contact {
   id: number;
   name: string;
+  last_name: string | null;
   phone: string | null;
+  mobile_phone: string | null;
   email: string | null;
   lead_status: string | null;
   creation_date: string | null;
   last_update: string | null;
   contacts_companies?: ContactCompanyLink[];
   tags_contacts?: TagLink[];
+  hotels_contacts?: ContactHotelLink[];
 }
 
 export interface ContactHistorial {
@@ -70,6 +78,17 @@ export interface Deal {
   closing_date_changed_at: string | null;
   status_prev: string | null;
   status_changed_at: string | null;
+  legal_company_name: string | null;
+  legal_business_name: string | null;
+  registered_address: string | null;
+  tax_id: string | null;
+  legal_rep_name: string | null;
+  legal_rep_id: string | null;
+  contract_signed: boolean | null;
+  monthly_fee: number | null;
+  billing_contact_name: string | null;
+  proposal_attachment_url: string | null;
+  proposal_attachment_name: string | null;
   contacts?: { id: number; name: string };
   billing_models?: { id: number; name: string };
   deals_hotels?: DealHotelLink[];
@@ -84,6 +103,11 @@ export interface HotelPersonnelLink {
 export interface HotelDealLink {
   id: number;
   deals?: { id: number; name: string; value: number | null; status: string | null };
+}
+
+export interface HotelContactLink {
+  id: number;
+  contacts?: { id: number; name: string };
 }
 
 export interface Hotel {
@@ -104,8 +128,22 @@ export interface Hotel {
   last_known_tenth: number | null;
   last_tenth_check_at: string | null;
   tenth_increased: boolean | null;
+  num_rooms: number | null;
+  adr: number | null;
+  booking_url: string | null;
+  website_url: string | null;
+  stars: number | null;
+  category: string | null;
+  is_chain: boolean | null;
+  pms: string | null;
+  city: string | null;
+  postal_code: string | null;
+  annual_revenue: number | null;
+  timezone: string | null;
+  description: string | null;
   hotels_personnel?: HotelPersonnelLink[];
   deals_hotels?: HotelDealLink[];
+  hotels_contacts?: HotelContactLink[];
   tickets?: { id: number; status: string | null; created_at: string }[];
 }
 
@@ -153,7 +191,7 @@ export const DEAL_STAGES = ["Prospecto", "Contactado", "Propuesta", "Negociació
 export type DealStage = (typeof DEAL_STAGES)[number];
 export const OPEN_STAGES: DealStage[] = ["Prospecto", "Contactado", "Propuesta", "Negociación"];
 export const LEAD_STATUSES = ["Lead", "Oportunidad", "Cliente", "Inactivo"] as const;
-export const CHARGE_TYPES = ["Mensual", "Trimestral", "Anual", "Pago único"] as const;
+export const CHARGE_TYPES = ["Mensual", "Trimestral", "Anual", "Pago único", "Por décima"] as const;
 
 export const TICKET_STAGES = ["Por iniciar", "Seguimiento activo", "Consolidación", "Décima alcanzada", "Cierre de ciclo"] as const;
 export type TicketStage = (typeof TICKET_STAGES)[number];

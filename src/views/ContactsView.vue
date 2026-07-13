@@ -21,7 +21,7 @@ import Modal from "../components/ui/Modal.vue";
 import { LEAD_STATUSES } from "../lib/types";
 import type { Contact, ColumnDef } from "../lib/types";
 
-const CONTACTS_SELECT = "*, contacts_companies(id, role, companies(id, name)), tags_contacts(id, tags(id, name))";
+const CONTACTS_SELECT = "*, contacts_companies(id, role, companies(id, name)), tags_contacts(id, tags(id, name)), hotels_contacts(id, hotels(id, name))";
 
 const search = useSearchStore();
 const columns = useColumnStore();
@@ -30,7 +30,7 @@ const toast = useToastStore();
 const confirm = useConfirmStore();
 
 const { rows, pager, fetchPage, setSearch, setFilters, setSort, setPage, setPageSize } = usePagedEntity<Contact>(
-  { table: "contacts", select: CONTACTS_SELECT, searchCols: ["name", "email", "phone"] },
+  { table: "contacts", select: CONTACTS_SELECT, searchCols: ["name", "last_name", "email", "phone", "mobile_phone"] },
   "creation_date",
 );
 
@@ -43,12 +43,13 @@ const exporting = ref(false);
 async function exportCsv() {
   exporting.value = true;
   try {
-    const all = await fetchAllFiltered<Contact>("contacts", CONTACTS_SELECT, "creation_date", pager.search, ["name", "email", "phone"], pager.filters);
+    const all = await fetchAllFiltered<Contact>("contacts", CONTACTS_SELECT, "creation_date", pager.search, ["name", "last_name", "email", "phone", "mobile_phone"], pager.filters);
     const visibleCols = columns.contactos.filter((c) => c.visible);
     const csvRows = all.map((c) => {
       const row: Record<string, unknown> = {};
       for (const col of visibleCols) {
         if (col.key === "empresa") row[col.label] = c.contacts_companies?.[0]?.companies?.name ?? "";
+        else if (col.key === "hotel") row[col.label] = c.hotels_contacts?.[0]?.hotels?.name ?? "";
         else if (col.key === "etiquetas") row[col.label] = (c.tags_contacts || []).map((t) => t.tags?.name).filter(Boolean).join(", ");
         else if (col.key === "creation_date" || col.key === "last_update") row[col.label] = fdate((c as unknown as Record<string, string | null>)[col.dbCol ?? col.key]);
         else row[col.label] = (c as unknown as Record<string, unknown>)[col.dbCol ?? col.key];
@@ -157,6 +158,7 @@ async function createTag() {
         </template>
         <span v-else style="color: var(--faint)">—</span>
       </template>
+      <template #cell-hotel="{ row }">{{ row.hotels_contacts?.[0]?.hotels?.name || "—" }}</template>
       <template #cell-etiquetas="{ row }">
         <template v-if="row.tags_contacts?.length">
           <span v-for="t in row.tags_contacts" :key="t.id" class="tag chip">{{ t.tags?.name }}</span>

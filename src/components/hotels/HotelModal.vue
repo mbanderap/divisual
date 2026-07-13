@@ -25,6 +25,19 @@ const deviationDays = ref<string>(props.hotel?.deviation_days != null ? String(p
 const deviationPct = ref<string>(props.hotel?.deviation_pct != null ? String(props.hotel.deviation_pct) : "");
 const remainingTenths = ref<string>(props.hotel?.remaining_tenths != null ? String(props.hotel.remaining_tenths) : "");
 const invoiced = ref(String(props.hotel?.invoiced ?? false));
+const numRooms = ref<string>(props.hotel?.num_rooms != null ? String(props.hotel.num_rooms) : "");
+const adr = ref<string>(props.hotel?.adr != null ? String(props.hotel.adr) : "");
+const bookingUrl = ref(props.hotel?.booking_url ?? "");
+const websiteUrl = ref(props.hotel?.website_url ?? "");
+const stars = ref<string>(props.hotel?.stars != null ? String(props.hotel.stars) : "");
+const category = ref(props.hotel?.category ?? "");
+const isChain = ref(String(props.hotel?.is_chain ?? false));
+const pms = ref(props.hotel?.pms ?? "");
+const city = ref(props.hotel?.city ?? "");
+const postalCode = ref(props.hotel?.postal_code ?? "");
+const annualRevenue = ref<string>(props.hotel?.annual_revenue != null ? String(props.hotel.annual_revenue) : "");
+const timezone = ref(props.hotel?.timezone ?? "");
+const description = ref(props.hotel?.description ?? "");
 const saving = ref(false);
 
 const assignments = ref<HotelPersonnelLink[]>([...(props.hotel?.hotels_personnel ?? [])]);
@@ -67,6 +80,13 @@ async function save() {
       deviation_days: deviationDays.value === "" ? null : parseInt(deviationDays.value), deviation_pct: nnum(deviationPct.value),
       remaining_tenths: nnum(remainingTenths.value), invoiced: invoiced.value === "true",
       updated_at: new Date().toISOString(),
+      num_rooms: numRooms.value === "" ? null : parseInt(numRooms.value), adr: nnum(adr.value),
+      booking_url: nn(bookingUrl.value.trim()), website_url: nn(websiteUrl.value.trim()),
+      stars: stars.value === "" ? null : parseInt(stars.value), category: nn(category.value.trim()),
+      is_chain: isChain.value === "true", pms: nn(pms.value.trim()),
+      city: nn(city.value.trim()), postal_code: nn(postalCode.value.trim()),
+      annual_revenue: nnum(annualRevenue.value), timezone: nn(timezone.value.trim()),
+      description: nn(description.value.trim()),
     };
     const { error } = props.hotel
       ? await supabase.from("hotels").update(row).eq("id", props.hotel.id)
@@ -83,6 +103,32 @@ async function save() {
   <Modal @close="emit('close')">
     <h2>{{ hotel ? "Editar hotel" : "Nuevo hotel" }}</h2>
     <div class="field"><label>Nombre del hotel</label><input v-model="name" type="text" placeholder="Nombre comercial" /></div>
+    <div class="field-row-3">
+      <div class="field"><label>Nº de habitaciones</label><input v-model="numRooms" type="number" /></div>
+      <div class="field"><label>ADR</label><input v-model="adr" type="number" /></div>
+      <div class="field"><label>Nº estrellas</label><input v-model="stars" type="number" min="0" max="7" /></div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Categoría</label>
+        <input v-model="category" type="text" placeholder="Hotel, apartamento..." />
+      </div>
+      <div class="field"><label>Cadena</label><select v-model="isChain"><option value="false">No</option><option value="true">Sí</option></select></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>PMS</label><input v-model="pms" type="text" placeholder="Sistema de gestión hotelera" /></div>
+      <div class="field"><label>Ingresos anuales</label><input v-model="annualRevenue" type="number" /></div>
+    </div>
+    <div class="field-row-3">
+      <div class="field"><label>Ciudad</label><input v-model="city" type="text" /></div>
+      <div class="field"><label>Código postal</label><input v-model="postalCode" type="text" /></div>
+      <div class="field"><label>Zona horaria</label><input v-model="timezone" type="text" placeholder="Europe/Madrid" /></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>URL booking</label><input v-model="bookingUrl" type="text" placeholder="https://..." /></div>
+      <div class="field"><label>URL de la web del hotel</label><input v-model="websiteUrl" type="text" placeholder="https://..." /></div>
+    </div>
+    <div class="field"><label>Descripción del hotel</label><textarea v-model="description" placeholder="Descripción libre"></textarea></div>
     <div class="field-row">
       <div class="field"><label>Plan de gestión</label><select v-model="hasPlan"><option value="true">Plan activo</option><option value="false">Sin plan</option></select></div>
       <div class="field"><label>Fin del plan</label><input v-model="planEndDate" type="date" /></div>

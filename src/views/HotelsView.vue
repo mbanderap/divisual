@@ -48,6 +48,7 @@ async function exportCsv() {
       for (const c of visibleCols) {
         if (c.key === "equipo") row[c.label] = (h.hotels_personnel || []).length;
         else if (c.key === "has_plan") row[c.label] = h.has_plan ? "Sí" : "No";
+        else if (c.key === "is_chain") row[c.label] = h.is_chain ? "Sí" : "No";
         else if (c.key === "plan_end_date") row[c.label] = fdate(h.plan_end_date);
         else row[c.label] = (h as unknown as Record<string, unknown>)[c.dbCol ?? c.key];
       }
@@ -137,6 +138,7 @@ function planEndingSoonDays(h: Hotel): number | null {
           <div class="cell-person"><span class="avatar">{{ row.name.slice(0, 2).toUpperCase() }}</span><span class="p-name">{{ row.name }}</span></div>
         </template>
         <template #cell-has_plan="{ row }"><span class="badge" :class="row.has_plan ? 'on' : 'off'">{{ row.has_plan ? "Plan activo" : "Sin plan" }}</span></template>
+        <template #cell-is_chain="{ row }">{{ row.is_chain ? "Sí" : "No" }}</template>
         <template #cell-deviation_days="{ row }">
           <span v-if="row.deviation_days == null">—</span>
           <span v-else :class="row.deviation_days > 0 ? 'neg' : 'pos'">{{ row.deviation_days }}</span>

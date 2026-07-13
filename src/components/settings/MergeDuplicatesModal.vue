@@ -19,12 +19,15 @@ const CONFIG = {
     label: "contacto",
     fields: [
       { key: "name", label: "Nombre" },
+      { key: "last_name", label: "Apellidos" },
       { key: "email", label: "Correo" },
-      { key: "phone", label: "Teléfono" },
+      { key: "phone", label: "Número de teléfono" },
+      { key: "mobile_phone", label: "Número de móvil" },
       { key: "lead_status", label: "Estado del lead", options: LEAD_STATUSES as readonly string[] },
     ],
     relations: [
       { table: "contacts_companies", col: "contact_id" },
+      { table: "hotels_contacts", col: "contact_id" },
       { table: "contacts_historial", col: "contact_id" },
       { table: "tags_contacts", col: "contact_id" },
       { table: "deals", col: "contact_id" },

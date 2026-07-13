@@ -6,11 +6,13 @@ import { useToastStore } from "../../stores/toast";
 import { useCatalogStore } from "../../stores/catalogs";
 
 interface FieldDef { key: string; label: string; required?: boolean }
-const IMPORT_FIELDS: Record<"contactos" | "empresas", FieldDef[]> = {
+const IMPORT_FIELDS: Record<"contactos" | "empresas" | "hoteles", FieldDef[]> = {
   contactos: [
     { key: "name", label: "Nombre", required: true },
+    { key: "last_name", label: "Apellidos" },
     { key: "email", label: "Correo electrónico" },
-    { key: "phone", label: "Teléfono" },
+    { key: "phone", label: "Número de teléfono" },
+    { key: "mobile_phone", label: "Número de móvil" },
     { key: "lead_status", label: "Estado del lead" },
   ],
   empresas: [
@@ -19,12 +21,28 @@ const IMPORT_FIELDS: Record<"contactos" | "empresas", FieldDef[]> = {
     { key: "category", label: "Categoría" },
     { key: "client", label: "Es cliente (sí/no)" },
   ],
+  hoteles: [
+    { key: "name", label: "Nombre de hotel", required: true },
+    { key: "num_rooms", label: "Nº de habitaciones" },
+    { key: "adr", label: "ADR" },
+    { key: "booking_url", label: "URL booking" },
+    { key: "website_url", label: "URL de la web del hotel" },
+    { key: "stars", label: "Nº estrellas" },
+    { key: "category", label: "Categoría" },
+    { key: "is_chain", label: "Cadena (sí/no)" },
+    { key: "pms", label: "PMS" },
+    { key: "city", label: "Ciudad" },
+    { key: "postal_code", label: "Código postal" },
+    { key: "annual_revenue", label: "Ingresos anuales" },
+    { key: "timezone", label: "Zona horaria" },
+    { key: "description", label: "Descripción del hotel" },
+  ],
 };
 
 const toast = useToastStore();
 const catalogs = useCatalogStore();
 
-const entity = ref<"contactos" | "empresas">("contactos");
+const entity = ref<"contactos" | "empresas" | "hoteles">("contactos");
 const dragging = ref(false);
 const rows = ref<Record<string, string>[] | null>(null);
 const headers = ref<string[]>([]);
@@ -75,7 +93,9 @@ async function runImport() {
   const reqField = fields.find((f) => f.required)!;
   if (!mapping.value[reqField.key]) { toast.show(`Asigna una columna al campo obligatorio "${reqField.label}".`); return; }
 
-  const table = entity.value === "contactos" ? "contacts" : "companies";
+  const table = entity.value === "contactos" ? "contacts" : entity.value === "empresas" ? "companies" : "hotels";
+  const BOOLEAN_FIELDS = ["client", "is_chain"];
+  const NUMERIC_FIELDS = ["num_rooms", "adr", "stars", "annual_revenue"];
   const toInsert = rows.value
     .map((r) => {
       const row: Record<string, unknown> = {};
@@ -83,7 +103,8 @@ async function runImport() {
         const col = mapping.value[f.key];
         if (!col) continue;
         const raw = (r[col] ?? "").toString().trim();
-        if (f.key === "client") { row[f.key] = /^(s[ií]|true|yes|1)$/i.test(raw); continue; }
+        if (BOOLEAN_FIELDS.includes(f.key)) { row[f.key] = /^(s[ií]|true|yes|1)$/i.test(raw); continue; }
+        if (NUMERIC_FIELDS.includes(f.key)) { row[f.key] = raw === "" ? null : Number(raw); continue; }
         row[f.key] = raw === "" ? null : raw;
       }
       return row;
@@ -121,6 +142,7 @@ async function runImport() {
     <select v-model="entity">
       <option value="contactos">Contactos</option>
       <option value="empresas">Empresas</option>
+      <option value="hoteles">Hoteles</option>
     </select>
   </div>
 
