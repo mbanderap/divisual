@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, watch, onMounted } from "vue";
 import Modal from "../ui/Modal.vue";
 import ComboSingle from "../ui/ComboSingle.vue";
 import { supabase } from "../../lib/supabase";
@@ -7,7 +7,7 @@ import { useAuthStore } from "../../stores/auth";
 import { useToastStore } from "../../stores/toast";
 import { useCatalogStore } from "../../stores/catalogs";
 import { syncBridge } from "../../lib/syncBridge";
-import { nn, fdate } from "../../lib/format";
+import { nn, fdate, debounce } from "../../lib/format";
 import { ICONS } from "../../lib/icons";
 import { LEAD_STATUSES } from "../../lib/types";
 import type { Contact, ContactHistorial, Company, Hotel } from "../../lib/types";
@@ -36,6 +36,15 @@ const note = ref("");
 const saving = ref(false);
 const history = ref<ContactHistorial[] | null>(null);
 const historyError = ref(false);
+const dupEmailWarning = ref(false);
+
+const checkEmailDup = debounce(async (value: string) => {
+  const term = value.trim();
+  if (props.contact || !term) { dupEmailWarning.value = false; return; }
+  const { data } = await supabase.from("contacts").select("id").eq("email", term).limit(1);
+  dupEmailWarning.value = !!data?.length;
+}, 400);
+watch(email, (v) => checkEmailDup(v));
 
 onMounted(async () => {
   if (!props.contact) return;
@@ -144,6 +153,7 @@ async function save() {
             v-html="ICONS.mail"
           ></a>
         </div>
+        <p v-if="dupEmailWarning" style="font-size: 12.5px; color: var(--danger); margin-top: 6px">Ya existe un contacto con este correo.</p>
       </div>
     </div>
     <div class="field-row">

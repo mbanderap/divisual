@@ -27,19 +27,35 @@ create index if not exists idx_hotels_contacts_hotel_id on hotels_contacts(hotel
 -- ---------------------------------------------------------------------
 -- Hotel (empresa) — ficha comercial del hotel
 -- ---------------------------------------------------------------------
-alter table hotels add column if not exists num_rooms integer;
-alter table hotels add column if not exists adr numeric;
-alter table hotels add column if not exists booking_url text;
-alter table hotels add column if not exists website_url text;
-alter table hotels add column if not exists stars integer;
-alter table hotels add column if not exists category text; -- 'Hotel', 'Apartamento', etc.
-alter table hotels add column if not exists is_chain boolean not null default false;
-alter table hotels add column if not exists pms text;
-alter table hotels add column if not exists city text;
-alter table hotels add column if not exists postal_code text;
-alter table hotels add column if not exists annual_revenue numeric;
-alter table hotels add column if not exists timezone text;
-alter table hotels add column if not exists description text;
+alter table hotels add column if not exists num_rooms integer; -- sin fuente todavía, se rellena a mano o de otra fuente pendiente
+alter table hotels add column if not exists adr numeric; -- sin fuente todavía
+alter table hotels add column if not exists booking_url text; -- hoteles.url_booking
+alter table hotels add column if not exists stars integer; -- hoteles.categoria / raw.hoteles_booking_collisio.estrellas
+alter table hotels add column if not exists category text; -- hoteles.tipo ('Hotel', 'Apartamento', etc.)
+alter table hotels add column if not exists is_chain boolean not null default false; -- sin fuente todavía
+alter table hotels add column if not exists pms text; -- hoteles.pms
+alter table hotels add column if not exists city text; -- raw.hoteles_booking_collisio.ciudad
+alter table hotels add column if not exists postal_code text; -- raw.hoteles_booking_collisio.codigo_postal
+alter table hotels add column if not exists address text; -- raw.hoteles_booking_collisio.direccion
+alter table hotels add column if not exists description text; -- raw.hoteles_booking_collisio.descripcion
+
+-- Referencia al hotel de origen en la base de datos operativa (Jaippy),
+-- para poder sincronizar/actualizar por id en vez de por nombre. Índice
+-- único sin condición: un unique index normal ya permite varios NULL
+-- (hoteles creados a mano sin jaippy_id no chocan entre sí), y así
+-- "on conflict (jaippy_id)" funciona sin tener que repetir el predicado.
+alter table hotels add column if not exists jaippy_id integer;
+create unique index if not exists idx_hotels_jaippy_id on hotels(jaippy_id);
+
+-- Se elimina el seguimiento manual de "décimas": ya no se lleva en Hotel.
+alter table hotels drop column if exists contracted_tenths;
+alter table hotels drop column if exists current_tenth;
+alter table hotels drop column if exists remaining_tenths;
+
+-- Red de seguridad: por si esta tabla se creó en algún momento sin esta
+-- columna (el sync de Jaippy la necesita para saber cuándo se actualizó
+-- cada hotel por última vez).
+alter table hotels add column if not exists updated_at timestamptz;
 
 
 -- ---------------------------------------------------------------------

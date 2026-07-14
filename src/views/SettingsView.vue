@@ -39,12 +39,14 @@ async function inviteUser() {
   finally { invitingUser.value = false; }
 }
 
+const BILLING_COLORS = ["#6366f1", "#059669", "#d97706", "#dc2626", "#7c3aed", "#0891b2"];
 const newBillingName = ref("");
 async function addBillingModel() {
   const n = newBillingName.value.trim();
   if (!n) return;
   try {
-    const { error } = await supabase.from("billing_models").insert({ name: n });
+    const color = BILLING_COLORS[catalogs.billing.length % BILLING_COLORS.length];
+    const { error } = await supabase.from("billing_models").insert({ name: n, color });
     if (error) throw error;
     toast.show("Modelo añadido");
     newBillingName.value = "";
@@ -165,6 +167,7 @@ function exportJson() {
     <p class="s-desc">Catálogo que se asigna a cada negocio. Añade aquí los modelos con los que trabajas.</p>
     <div class="multi-list" style="margin-bottom: 14px">
       <div v-for="b in catalogs.billing" :key="b.id" class="multi-chip">
+        <span style="display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--dot-color); margin-right: 6px" :style="{ '--dot-color': b.color || 'var(--faint)' }"></span>
         <span>{{ b.name }}</span>
         <button type="button" title="Eliminar" @click="removeBillingModel(b)" v-html="ICONS.trash"></button>
       </div>

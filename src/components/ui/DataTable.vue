@@ -8,8 +8,20 @@ const props = defineProps<{
   rows: T[];
   activeSortKey: string | null;
   activeSortDir: "asc" | "desc";
+  selectable?: boolean;
+  selected?: number[];
 }>();
-const emit = defineEmits<{ sort: [ColumnDef<T>]; "row-click": [T]; edit: [T]; delete: [T] }>();
+const emit = defineEmits<{ sort: [ColumnDef<T>]; "row-click": [T]; edit: [T]; delete: [T]; "update:selected": [number[]] }>();
+
+const allOnPageSelected = computed(() => props.rows.length > 0 && props.rows.every((r) => props.selected?.includes(r.id)));
+function toggleAll() {
+  const ids = props.rows.map((r) => r.id);
+  emit("update:selected", allOnPageSelected.value ? (props.selected ?? []).filter((id) => !ids.includes(id)) : [...new Set([...(props.selected ?? []), ...ids])]);
+}
+function toggleRow(id: number) {
+  const cur = props.selected ?? [];
+  emit("update:selected", cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]);
+}
 
 const visibleColumns = computed(() => props.columns.filter((c) => c.visible));
 
@@ -77,6 +89,7 @@ watch(() => [props.columns, props.rows], () => nextTick(measure), { deep: true }
       <table ref="tableEl">
         <thead>
           <tr>
+            <th v-if="selectable" style="width: 36px"><input type="checkbox" :checked="allOnPageSelected" @click.stop="toggleAll" /></th>
             <th v-for="c in visibleColumns" :key="c.key" class="sortable" @click="emit('sort', c)">
               {{ c.label }}<span v-if="arrow(c)" class="s-arrow">{{ arrow(c) }}</span>
             </th>
@@ -85,6 +98,7 @@ watch(() => [props.columns, props.rows], () => nextTick(measure), { deep: true }
         </thead>
         <tbody>
           <tr v-for="row in rows" :key="row.id" @click="emit('row-click', row)">
+            <td v-if="selectable" @click.stop><input type="checkbox" :checked="selected?.includes(row.id)" @change="toggleRow(row.id)" /></td>
             <td v-for="c in visibleColumns" :key="c.key" :class="{ num: c.numeric }">
               <slot :name="`cell-${c.key}`" :row="row">{{ cellValue(row, c) }}</slot>
             </td>

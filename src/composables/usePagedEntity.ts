@@ -57,6 +57,7 @@ export function usePagedEntity<T>(meta: EntityMeta, defaultSortKey: string) {
         if (f.op === "eq") query = query.eq(f.col, f.value);
         else if (f.op === "gte") query = query.gte(f.col, f.value as string | number);
         else if (f.op === "lte") query = query.lte(f.col, f.value as string | number);
+        else if (f.op === "in") query = query.in(f.col, f.value as (string | number)[]);
         else query = query.is(f.col, f.value as boolean | null);
       }
       query = query.order(pager.sortKey, { ascending: pager.sortDir === "asc", nullsFirst: false }).range(from, to);

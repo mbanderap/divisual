@@ -544,39 +544,9 @@ end $$;
 
 
 -- =====================================================================
--- NOTA — Importación de Hoteles desde Jaippy (script operativo, no es
--- parte del esquema; se ejecuta cada vez que quieras sincronizar datos,
--- no solo una vez). El campo hotels.name ya es unique en el PASO 1, así
--- que no hace falta el "alter table ... add constraint" que llevaba la
--- versión anterior de este script.
---
--- Paso A — ejecutar en la base de datos de JAIPPY. Copiar TODO el
--- resultado (una línea de SQL por hotel):
---
--- select format(
---   'insert into hotels (name, tau, has_plan, plan_end_date, deviation_days, current_ij, tenth_increased, last_known_tenth, last_tenth_check_at, updated_at) '
---   || 'values (%L, %L, %L, %L, %L, %L, false, null, now(), now()) '
---   || 'on conflict (name) do update set '
---   || 'tau = excluded.tau, has_plan = excluded.has_plan, plan_end_date = excluded.plan_end_date, deviation_days = excluded.deviation_days, '
---   || 'tenth_increased = coalesce(excluded.current_ij > hotels.current_ij, false), '
---   || 'last_known_tenth = hotels.current_ij, '
---   || 'last_tenth_check_at = now(), '
---   || 'current_ij = excluded.current_ij, '
---   || 'updated_at = now();',
---   hotel_name, tau, has_plan, plan_end_date, deviation_days, current_ij
--- )
--- from (
---   select
---     h.nombre as hotel_name,
---     h.tau,
---     exists(select 1 from planes p2 where p2.hotel = h.id and p2.activo) as has_plan,
---     (select p.fecha_fin from planes p where p.hotel = h.id and p.activo order by p.fecha_inicio desc limit 1) as plan_end_date,
---     (select mp.desviacion from metricas_plan mp join planes p on p.id = mp.plan and p.hotel = h.id where p.activo order by mp.fecha desc limit 1) as deviation_days,
---     (select m.ij from metricas m where m.hotel = h.id order by m.fecha desc, m.plataforma asc limit 1) as current_ij
---   from hoteles h
--- ) t;
---
--- Paso B — pegar y ejecutar TODO el resultado del Paso A en el SQL
--- Editor de Supabase. Al usar "on conflict (name) do update", funciona
--- igual si el hotel ya existía o si hay que crearlo de cero.
+-- NOTA — Importación de Hoteles desde Jaippy: ver
+-- sql/2026-07-14_import_hoteles_jaippy.sql. Esa versión sustituye a la
+-- que estaba aquí (solo traía 5 campos y emparejaba por nombre); ahora
+-- trae todos los campos comerciales del hotel y empareja por
+-- hotels.jaippy_id.
 -- =====================================================================

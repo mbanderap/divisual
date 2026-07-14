@@ -23,18 +23,17 @@ const IMPORT_FIELDS: Record<"contactos" | "empresas" | "hoteles", FieldDef[]> = 
   ],
   hoteles: [
     { key: "name", label: "Nombre de hotel", required: true },
+    { key: "jaippy_id", label: "ID Jaippy" },
     { key: "num_rooms", label: "Nº de habitaciones" },
     { key: "adr", label: "ADR" },
     { key: "booking_url", label: "URL booking" },
-    { key: "website_url", label: "URL de la web del hotel" },
     { key: "stars", label: "Nº estrellas" },
     { key: "category", label: "Categoría" },
     { key: "is_chain", label: "Cadena (sí/no)" },
     { key: "pms", label: "PMS" },
     { key: "city", label: "Ciudad" },
     { key: "postal_code", label: "Código postal" },
-    { key: "annual_revenue", label: "Ingresos anuales" },
-    { key: "timezone", label: "Zona horaria" },
+    { key: "address", label: "Dirección" },
     { key: "description", label: "Descripción del hotel" },
   ],
 };
@@ -95,7 +94,7 @@ async function runImport() {
 
   const table = entity.value === "contactos" ? "contacts" : entity.value === "empresas" ? "companies" : "hotels";
   const BOOLEAN_FIELDS = ["client", "is_chain"];
-  const NUMERIC_FIELDS = ["num_rooms", "adr", "stars", "annual_revenue"];
+  const NUMERIC_FIELDS = ["jaippy_id", "num_rooms", "adr", "stars"];
   const toInsert = rows.value
     .map((r) => {
       const row: Record<string, unknown> = {};

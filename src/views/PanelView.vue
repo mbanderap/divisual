@@ -1,26 +1,13 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, ref } from "vue";
 import { useCatalogStore } from "../stores/catalogs";
-import { useToastStore } from "../stores/toast";
-import { eur, num } from "../lib/format";
+import { eur } from "../lib/format";
 import { DEAL_STAGES, OPEN_STAGES } from "../lib/types";
 import DealModal from "../components/deals/DealModal.vue";
 import RevenueForecastChart from "../components/panel/RevenueForecastChart.vue";
 
 const catalogs = useCatalogStore();
-const toast = useToastStore();
 const showDealModal = ref(false);
-const loadingStats = ref(true);
-
-onMounted(async () => {
-  try {
-    if (!catalogs.panelStats) await catalogs.loadPanelStats();
-  } catch (e) {
-    toast.error(e, "cargar las estadísticas del panel");
-  } finally {
-    loadingStats.value = false;
-  }
-});
 
 const open = computed(() => catalogs.deals.filter((d) => d.status && OPEN_STAGES.includes(d.status as never)));
 const won = computed(() => catalogs.deals.filter((d) => d.status === "Ganado"));
@@ -33,7 +20,6 @@ const byStage = computed(() =>
   }),
 );
 const maxStage = computed(() => Math.max(...byStage.value.map((s) => s.total), 1));
-const devHotels = computed(() => catalogs.panelStats?.devHotels ?? []);
 
 function toKey(d: Date): string {
   return d.toISOString().slice(0, 10);
@@ -123,11 +109,11 @@ function onDealSaved() {
       <div class="k-delta">negocios con cierre movido este mes</div>
     </router-link>
     <router-link class="card kpi kpi-link" :to="{ name: 'hoteles' }">
-      <div class="k-label">Hoteles con plan</div>
+      <div class="k-label">Hoteles cliente</div>
       <div class="k-value">
-        {{ catalogs.counts.hotelsPlan.toLocaleString("es-ES") }}<span style="font-size: 15px; color: var(--faint)">/{{ catalogs.counts.hotels.toLocaleString("es-ES") }}</span>
+        {{ catalogs.counts.hotelsClient.toLocaleString("es-ES") }}<span style="font-size: 15px; color: var(--faint)">/{{ catalogs.counts.hotels.toLocaleString("es-ES") }}</span>
       </div>
-      <div class="k-delta">planes de gestión activos</div>
+      <div class="k-delta">hoteles cliente</div>
     </router-link>
     <router-link class="card kpi kpi-link" :to="{ name: 'contactos' }">
       <div class="k-label">Contactos</div>
@@ -156,15 +142,8 @@ function onDealSaved() {
       </div>
     </div>
     <div class="card panel">
-      <div class="panel-title">Desviación de planes <span class="hint">hoteles con mayor desvío</span></div>
-      <div v-if="loadingStats" class="loading">Calculando...</div>
-      <template v-else-if="devHotels.length">
-        <div v-for="h in devHotels" :key="h.id" class="dev-item">
-          <div class="dv-name">{{ h.name }}<div class="dv-days">{{ h.deviation_days != null ? h.deviation_days + " días" : "" }}</div></div>
-          <span class="dv-pct" :class="(h.deviation_pct ?? 0) >= 0 ? 'pos' : 'neg'">{{ (h.deviation_pct ?? 0) >= 0 ? "+" : "" }}{{ num(h.deviation_pct) }}%</span>
-        </div>
-      </template>
-      <div v-else class="empty" style="padding: 24px"><p>Ningún hotel con plan y desviación registrada.</p></div>
+      <div class="panel-title">Décimas <span class="hint">hoteles que suben y bajan de década</span></div>
+      <div class="empty" style="padding: 24px"><p>Próximamente.</p></div>
     </div>
   </div>
 

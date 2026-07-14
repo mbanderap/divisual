@@ -1,9 +1,17 @@
 -- =====================================================================
 -- Divisual — Datos de prueba
--- Rellena las 27 tablas de sql/2026-07-09_schema_completo.sql con datos
--- de ejemplo que tocan todos los campos y ponen a prueba las funciones
--- nuevas (vencimientos, negocios estancados, forecast, semáforo de
--- riesgo, recurrencia, duplicados, Mi día, notificaciones...).
+-- Rellena las tablas de sql/2026-07-09_schema_completo.sql +
+-- sql/2026-07-13_add_missing_fields.sql con datos de ejemplo que tocan
+-- todos los campos (incluidos los nuevos: apellidos/móvil de contacto,
+-- vínculo contacto-hotel, ficha comercial de hotel, y los datos legales
+-- de negocio) y ponen a prueba las funciones ya existentes (vencimientos,
+-- negocios estancados, forecast, semáforo de riesgo, recurrencia,
+-- duplicados, Mi día, notificaciones...).
+--
+-- Requiere haber ejecutado antes sql/2026-07-13_add_missing_fields.sql
+-- (crea last_name, mobile_phone, hotels_contacts, jaippy_id, address, los
+-- campos comerciales de hotel y los datos legales de negocio; quita las
+-- columnas de décimas que ya no existen en el modelo).
 --
 -- Ejecútalo DESPUÉS de sql/2026-07-09_schema_completo.sql, de una vez y
 -- de arriba a abajo (los bloques de más abajo buscan los ids de los de
@@ -40,27 +48,37 @@ insert into companies (name, phone, client, category) values
 ('Consultora RevPlus', '+34911000004', false, 'Consultoría'),
 ('Cadena Hotelera Sol', '+34911000005', true, 'Cadena hotelera'); -- duplicada a propósito
 
-insert into contacts (name, phone, email, lead_status) values
-('Marta Fernández', '+34622000001', 'marta.fernandez@solhoteles.com', 'Cliente'),
-('Pedro Sánchez', '+34622000002', 'pedro.sanchez@viajamas.com', 'Oportunidad'),
-('Lucía Romero', '+34622000003', 'lucia.romero@costaazul.com', 'Cliente'),
-('Diego Navarro', '+34622000004', 'diego.navarro@revplus.com', 'Lead'),
-('Marta Fernandez', '+34622000006', 'marta.fernandez@solhoteles.com', 'Cliente'); -- duplicada a propósito (mismo correo)
+insert into contacts (name, last_name, phone, mobile_phone, email, lead_status) values
+('Marta Fernández', 'Fernández', '+34622000001', '+34611000001', 'marta.fernandez@solhoteles.com', 'Cliente'),
+('Pedro Sánchez', 'Sánchez', '+34622000002', '+34611000002', 'pedro.sanchez@viajamas.com', 'Oportunidad'),
+('Lucía Romero', 'Romero', '+34622000003', '+34611000003', 'lucia.romero@costaazul.com', 'Cliente'),
+('Diego Navarro', 'Navarro', '+34622000004', null, 'diego.navarro@revplus.com', 'Lead'),
+('Marta Fernandez', 'Fernandez', '+34622000006', '+34611000001', 'marta.fernandez@solhoteles.com', 'Cliente'); -- duplicada a propósito (mismo correo)
 
 insert into tags (name) values ('VIP'), ('Renovación'), ('Cadena'), ('Nuevo cliente');
 
 insert into billing_models (name) values ('Por décimas'), ('Fee fijo mensual'), ('Comisión sobre ingresos');
 
 insert into hotels (
-  name, has_plan, tau, contracted_tenths, current_ij, objective, deviation_days, deviation_pct,
-  current_tenth, remaining_tenths, invoiced, plan_end_date, updated_at,
-  last_known_tenth, last_tenth_check_at, tenth_increased
+  jaippy_id, name, has_plan, tau, current_ij, objective, deviation_days, deviation_pct,
+  plan_end_date, updated_at, income_current_month, income_next_month,
+  num_rooms, adr, booking_url, stars, category, is_chain, pms, city, postal_code, address, description
 ) values
-('Hotel Marbella Playa',    true,  82.5, 10, 950000,  1000000, 12,   5.2,   6, 4, true,  current_date + 45,  now(), 900000,  now() - interval '10 days', true),
-('Hotel Sevilla Centro',    true,  75.0, 8,  700000,  900000,  40,  -18.5,  4, 4, false, current_date + 20,  now(), 720000,  now() - interval '5 days',  false), -- vence pronto + desviación >15%
-('Hotel Costa Blanca Sur',  true,  90.2, 12, 1200000, 1150000, -5,   4.3,   9, 3, true,  current_date + 200, now(), 1150000, now() - interval '15 days', true),
-('Hotel Bilbao Deusto',     false, 60.0, null, null,  null,    null, null,  null, null, false, null,        now(), null,    null,                       null),
-('Hotel Valencia Puerto',   true,  68.4, 6,  500000,  650000,  160, -25.0,  3, 3, false, current_date + 10,  now(), 480000,  now() - interval '3 days',  true); -- desviación >150 días + vence pronto
+(101, 'Hotel Marbella Playa',   true,  82.5, 950000,  1000000, 12,   5.2,
+  current_date + 45,  now(), 18500, 21000,
+  120, 145.50, 'https://www.booking.com/hotel/es/marbella-playa.html', 4, 'Hotel', false, 'Opera Cloud', 'Marbella', '29600', 'Paseo Marítimo 24', 'Hotel frente al mar en pleno centro de Marbella, con vistas directas a la playa.'),
+(102, 'Hotel Sevilla Centro',   true,  75.0, 700000,  900000,  40,  -18.5,
+  current_date + 20,  now(), 9800, 8200,
+  85,  98.00,  'https://www.booking.com/hotel/es/sevilla-centro.html', 3, 'Hotel', false, 'Prestige', 'Sevilla', '41001', 'Calle Sierpes 10', 'Hotel boutique en pleno casco histórico de Sevilla.'), -- vence pronto + desviación >15%
+(103, 'Hotel Costa Blanca Sur', true,  90.2, 1200000, 1150000, -5,   4.3,
+  current_date + 200, now(), 26000, 27500,
+  200, 130.00, 'https://www.booking.com/hotel/es/costa-blanca-sur.html', 4, 'Hotel', true,  'Opera Cloud', 'Benidorm', '03501', 'Avenida del Mediterráneo 55', 'Gran hotel vacacional con acceso directo a la playa.'),
+(104, 'Hotel Bilbao Deusto',    false, 60.0, null,    null,    null, null,
+  null,               now(), null, null,
+  50,  null,   null, null, 'Apartamento', false, null, 'Bilbao', '48007', 'Calle Deusto 3', null),
+(105, 'Hotel Valencia Puerto',  true,  68.4, 500000,  650000,  160, -25.0,
+  current_date + 10,  now(), 7400, 9100,
+  95,  110.25, 'https://www.booking.com/hotel/es/valencia-puerto.html', 3, 'Hotel', false, 'Prestige', 'Valencia', '46024', 'Muelle de la Aduana 2', 'Hotel de negocios cerca del puerto y la Ciudad de las Artes.'); -- desviación >150 días + vence pronto
 
 insert into stories (name) values ('Importación de hoteles'), ('Rediseño del Panel'), ('Integración de calendario');
 
@@ -106,6 +124,10 @@ insert into hotels_personnel (id_hotel, id_personnel, role, area) values
 ((select id from hotels where name = 'Hotel Sevilla Centro'), (select id from personnel where email = 'javier.ruiz@uxhoteles.com'), 'Account Manager', 'Andalucía'),
 ((select id from hotels where name = 'Hotel Valencia Puerto'), (select id from personnel where email = 'ana.torres@uxhoteles.com'), 'Revenue Manager', 'Levante');
 
+insert into hotels_contacts (contact_id, hotel_id) values
+((select id from contacts where email = 'marta.fernandez@solhoteles.com' limit 1), (select id from hotels where name = 'Hotel Marbella Playa')),
+((select id from contacts where email = 'pedro.sanchez@viajamas.com' limit 1), (select id from hotels where name = 'Hotel Sevilla Centro'));
+
 insert into events_personnel (event_id, personnel_id) values
 ((select id from events where title = 'Reunión semanal de equipo'), (select id from personnel where email = 'mbandera@uxhoteles.com')),
 ((select id from events where title = 'Reunión semanal de equipo'), (select id from personnel where email = 'laura.gomez@uxhoteles.com')),
@@ -116,25 +138,38 @@ insert into events_personnel (event_id, personnel_id) values
 -- Negocios y su hotel/contacto vinculado
 -- ---------------------------------------------------------------------
 
-insert into deals (name, status, closing_date, value, type_of_charge, start_date, end_date, contact_id, billing_model, status_changed_at, closing_date_changed_at, closing_date_prev) values
+insert into deals (
+  name, status, closing_date, value, type_of_charge, start_date, end_date, contact_id, billing_model,
+  status_changed_at, closing_date_changed_at, closing_date_prev,
+  legal_company_name, legal_business_name, registered_address, tax_id, legal_rep_name, legal_rep_id,
+  contract_signed, monthly_fee, billing_contact_name
+) values
 ('Renovación Hotel Marbella Playa', 'Negociación', current_date + 8, 45000, 'Anual', null, null,
   (select id from contacts where email = 'marta.fernandez@solhoteles.com' limit 1), (select id from billing_models where name = 'Por décimas'),
-  now() - interval '3 days', now() - interval '3 days', current_date + 20), -- vence pronto + cambio de fecha reciente
+  now() - interval '3 days', now() - interval '3 days', current_date + 20,
+  'Sol Hoteles Costa del Sol S.L.', 'Sol Hoteles Costa del Sol Sociedad Limitada', 'Paseo Marítimo 24, 29600 Marbella, Málaga', 'B29123456',
+  'Marta Fernández Gil', '12345678A', true, 3750, 'Administración Sol Hoteles'), -- vence pronto + cambio de fecha reciente
 ('Seguimiento Hotel Sevilla Centro', 'Contactado', current_date + 90, 30000, 'Mensual', null, null,
   (select id from contacts where email = 'pedro.sanchez@viajamas.com' limit 1), (select id from billing_models where name = 'Fee fijo mensual'),
-  now() - interval '25 days', null, null), -- estancado (>14 días sin moverse de etapa)
+  now() - interval '25 days', null, null,
+  null, null, null, null, null, null, false, null, null), -- estancado (>14 días sin moverse de etapa)
 ('Nuevo contrato Hotel Costa Blanca Sur', 'Prospecto', current_date + 40, 20000, 'Anual', null, null,
   (select id from contacts where email = 'lucia.romero@costaazul.com' limit 1), (select id from billing_models where name = 'Comisión sobre ingresos'),
-  now() - interval '2 days', null, null),
+  now() - interval '2 days', null, null,
+  null, null, null, null, null, null, false, null, null),
 ('Contrato de servicio Hotel Costa Blanca Sur', 'Ganado', current_date - 60, 60000, 'Anual', current_date - 30, current_date + 335,
   (select id from contacts where email = 'lucia.romero@costaazul.com' limit 1), (select id from billing_models where name = 'Comisión sobre ingresos'),
-  now() - interval '60 days', null, null), -- ingresos "mes actual" (servicio activo)
+  now() - interval '60 days', null, null,
+  'Grupo Costa Azul S.A.', 'Grupo Costa Azul Sociedad Anónima', 'Avenida del Mediterráneo 55, 03501 Benidorm, Alicante', 'A03987654',
+  'Lucía Romero Vidal', '87654321B', true, 5000, 'Facturación Grupo Costa Azul'), -- ingresos "mes actual" (servicio activo)
 ('Ampliación Hotel Valencia Puerto', 'Ganado', current_date - 10, 25000, 'Anual',
   (date_trunc('month', current_date) + interval '2 months')::date, (date_trunc('month', current_date) + interval '14 months')::date,
   (select id from contacts where email = 'diego.navarro@revplus.com' limit 1), (select id from billing_models where name = 'Por décimas'),
-  now() - interval '10 days', null, null), -- ingresos "a futuro" (empieza en 2 meses)
+  now() - interval '10 days', null, null,
+  null, null, null, null, null, null, false, null, null), -- ingresos "a futuro" (empieza en 2 meses)
 ('Oportunidad Hotel Bilbao Deusto', 'Perdido', current_date - 5, 15000, 'Mensual', null, null, null, null,
-  now() - interval '5 days', null, null);
+  now() - interval '5 days', null, null,
+  null, null, null, null, null, null, false, null, null);
 
 insert into deals_hotels (deal_id, hotel_id) values
 ((select id from deals where name = 'Renovación Hotel Marbella Playa'), (select id from hotels where name = 'Hotel Marbella Playa')),

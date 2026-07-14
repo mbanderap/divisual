@@ -46,6 +46,13 @@ export interface Contact {
   hotels_contacts?: ContactHotelLink[];
 }
 
+export interface ContactList {
+  id: number;
+  name: string;
+  created_at: string;
+  contact_lists_contacts?: { id: number }[];
+}
+
 export interface ContactHistorial {
   id: number;
   contact_id: number;
@@ -56,6 +63,7 @@ export interface ContactHistorial {
 export interface BillingModel {
   id: number;
   name: string;
+  color: string | null;
 }
 
 export interface DealHotelLink {
@@ -89,6 +97,8 @@ export interface Deal {
   billing_contact_name: string | null;
   proposal_attachment_url: string | null;
   proposal_attachment_name: string | null;
+  quick_note: string | null;
+  quick_note_color: string | null;
   contacts?: { id: number; name: string };
   billing_models?: { id: number; name: string };
   deals_hotels?: DealHotelLink[];
@@ -113,33 +123,27 @@ export interface HotelContactLink {
 export interface Hotel {
   id: number;
   name: string;
-  has_plan: boolean | null;
+  is_client: boolean | null;
   tau: number | null;
-  contracted_tenths: number | null;
   current_ij: number | null;
   objective: number | null;
   deviation_days: number | null;
   deviation_pct: number | null;
-  current_tenth: number | null;
-  remaining_tenths: number | null;
-  invoiced: boolean | null;
   plan_end_date: string | null;
   updated_at: string | null;
-  last_known_tenth: number | null;
-  last_tenth_check_at: string | null;
-  tenth_increased: boolean | null;
+  jaippy_id: number | null;
+  income_current_month: number | null;
+  income_next_month: number | null;
   num_rooms: number | null;
   adr: number | null;
   booking_url: string | null;
-  website_url: string | null;
   stars: number | null;
   category: string | null;
   is_chain: boolean | null;
   pms: string | null;
   city: string | null;
   postal_code: string | null;
-  annual_revenue: number | null;
-  timezone: string | null;
+  address: string | null;
   description: string | null;
   hotels_personnel?: HotelPersonnelLink[];
   deals_hotels?: HotelDealLink[];
@@ -316,8 +320,8 @@ export type EventCategory = (typeof EVENT_CATEGORIES)[number];
 
 export interface FilterDef {
   col: string;
-  op: "eq" | "gte" | "lte" | "is";
-  value: string | number | boolean | null;
+  op: "eq" | "gte" | "lte" | "is" | "in";
+  value: string | number | boolean | null | (string | number)[];
 }
 
 export interface PagedListState<T> {

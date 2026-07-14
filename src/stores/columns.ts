@@ -30,11 +30,9 @@ function defaultCompanyColumns(): ColumnDef<Company>[] {
 function defaultHotelColumns(): ColumnDef<Hotel>[] {
   return [
     { key: "name", label: "Hotel", visible: true, dbCol: "name" },
-    { key: "has_plan", label: "Plan", visible: true, dbCol: "has_plan" },
+    { key: "is_client", label: "Cliente", visible: true, dbCol: "is_client" },
     { key: "current_ij", label: "IJ actual", visible: true, dbCol: "current_ij", numeric: true },
     { key: "objective", label: "Objetivo", visible: true, dbCol: "objective", numeric: true },
-    { key: "current_tenth", label: "Décima actual", visible: true, dbCol: "current_tenth", numeric: true },
-    { key: "contracted_tenths", label: "Décimas contratadas", visible: true, dbCol: "contracted_tenths", numeric: true },
     { key: "tau", label: "TAU", visible: true, dbCol: "tau", numeric: true },
     { key: "deviation_days", label: "Desv. (días)", visible: true, dbCol: "deviation_days", numeric: true },
     { key: "deviation_pct", label: "Desv. (valor)", visible: false, dbCol: "deviation_pct", numeric: true },
@@ -48,10 +46,11 @@ function defaultHotelColumns(): ColumnDef<Hotel>[] {
     { key: "pms", label: "PMS", visible: false, dbCol: "pms" },
     { key: "city", label: "Ciudad", visible: false, dbCol: "city" },
     { key: "postal_code", label: "Código postal", visible: false, dbCol: "postal_code" },
-    { key: "annual_revenue", label: "Ingresos anuales", visible: false, dbCol: "annual_revenue", numeric: true },
-    { key: "timezone", label: "Zona horaria", visible: false, dbCol: "timezone" },
+    { key: "address", label: "Dirección", visible: false, dbCol: "address" },
     { key: "booking_url", label: "URL booking", visible: false, dbCol: "booking_url" },
-    { key: "website_url", label: "Web del hotel", visible: false, dbCol: "website_url" },
+    { key: "jaippy_id", label: "ID Jaippy", visible: false, dbCol: "jaippy_id", numeric: true },
+    { key: "income_current_month", label: "Ingresos mes actual", visible: false, dbCol: "income_current_month", numeric: true },
+    { key: "income_next_month", label: "Ingresos mes siguiente", visible: false, dbCol: "income_next_month", numeric: true },
   ];
 }
 

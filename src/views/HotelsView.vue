@@ -32,9 +32,9 @@ const { rows, pager, fetchPage, setSearch, setFilters, setSort, setPage, setPage
   "name",
 );
 
-const planFilter = ref("");
-function applyPlanFilter() {
-  setFilters(planFilter.value === "" ? [] : [{ col: "has_plan", op: "eq", value: planFilter.value === "true" }]);
+const clientFilter = ref("");
+function applyClientFilter() {
+  setFilters(clientFilter.value === "" ? [] : [{ col: "is_client", op: "eq", value: clientFilter.value === "true" }]);
 }
 
 const exporting = ref(false);
@@ -47,7 +47,7 @@ async function exportCsv() {
       const row: Record<string, unknown> = {};
       for (const c of visibleCols) {
         if (c.key === "equipo") row[c.label] = (h.hotels_personnel || []).length;
-        else if (c.key === "has_plan") row[c.label] = h.has_plan ? "Sí" : "No";
+        else if (c.key === "is_client") row[c.label] = h.is_client ? "Sí" : "No";
         else if (c.key === "is_chain") row[c.label] = h.is_chain ? "Sí" : "No";
         else if (c.key === "plan_end_date") row[c.label] = fdate(h.plan_end_date);
         else row[c.label] = (h as unknown as Record<string, unknown>)[c.dbCol ?? c.key];
@@ -93,7 +93,7 @@ function progress(h: Hotel) {
 }
 const PLAN_ENDING_SOON_DAYS = 30;
 function planEndingSoonDays(h: Hotel): number | null {
-  if (!h.has_plan || !h.plan_end_date) return null;
+  if (!h.is_client || !h.plan_end_date) return null;
   const days = Math.ceil((new Date(h.plan_end_date).getTime() - Date.now()) / 86400000);
   return days >= 0 && days <= PLAN_ENDING_SOON_DAYS ? days : null;
 }
@@ -104,14 +104,14 @@ function planEndingSoonDays(h: Hotel): number | null {
     <div>
       <h1>Hoteles</h1>
       <div class="view-sub">
-        {{ pager.total.toLocaleString("es-ES") }} hoteles en total · {{ catalogs.counts.hotelsPlan.toLocaleString("es-ES") }} con plan activo{{ pager.search || pager.filters.length ? " · resultados filtrados" : "" }}
+        {{ pager.total.toLocaleString("es-ES") }} hoteles en total · {{ catalogs.counts.hotelsClient.toLocaleString("es-ES") }} clientes{{ pager.search || pager.filters.length ? " · resultados filtrados" : "" }}
       </div>
     </div>
     <div style="display: flex; gap: 9px; align-items: center">
-      <select v-model="planFilter" class="filter-select" @change="applyPlanFilter">
-        <option value="">Todos los planes</option>
-        <option value="true">Con plan</option>
-        <option value="false">Sin plan</option>
+      <select v-model="clientFilter" class="filter-select" @change="applyClientFilter">
+        <option value="">Todos</option>
+        <option value="true">Cliente</option>
+        <option value="false">No cliente</option>
       </select>
       <ViewControls v-model:mode="viewMode" @columns="showColEditor = true" />
       <button class="btn btn-ghost" :disabled="exporting" @click="exportCsv">{{ exporting ? "Exportando..." : "Exportar CSV" }}</button>
@@ -137,7 +137,7 @@ function planEndingSoonDays(h: Hotel): number | null {
         <template #cell-name="{ row }">
           <div class="cell-person"><span class="avatar">{{ row.name.slice(0, 2).toUpperCase() }}</span><span class="p-name">{{ row.name }}</span></div>
         </template>
-        <template #cell-has_plan="{ row }"><span class="badge" :class="row.has_plan ? 'on' : 'off'">{{ row.has_plan ? "Plan activo" : "Sin plan" }}</span></template>
+        <template #cell-is_client="{ row }"><span class="badge" :class="row.is_client ? 'on' : 'off'">{{ row.is_client ? "Cliente" : "No cliente" }}</span></template>
         <template #cell-is_chain="{ row }">{{ row.is_chain ? "Sí" : "No" }}</template>
         <template #cell-deviation_days="{ row }">
           <span v-if="row.deviation_days == null">—</span>
@@ -166,7 +166,7 @@ function planEndingSoonDays(h: Hotel): number | null {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6.5 7l1 13h9l1-13"/></svg>
           </button>
         </div>
-        <div class="co-name">{{ h.name }}<span class="badge" :class="h.has_plan ? 'on' : 'off'">{{ h.has_plan ? "Plan activo" : "Sin plan" }}</span></div>
+        <div class="co-name">{{ h.name }}<span class="badge" :class="h.is_client ? 'on' : 'off'">{{ h.is_client ? "Cliente" : "No cliente" }}</span></div>
         <div class="co-sector">{{ (h.hotels_personnel || []).length }} personas asignadas{{ h.plan_end_date ? " · plan hasta " + fdate(h.plan_end_date) : "" }}</div>
         <div v-if="planEndingSoonDays(h) != null" class="d-soon"><span class="icon-inline" v-html="ICONS.calendar"></span>el plan vence en {{ planEndingSoonDays(h) }} día{{ planEndingSoonDays(h) === 1 ? "" : "s" }}</div>
         <template v-if="progress(h) != null">
@@ -175,7 +175,7 @@ function planEndingSoonDays(h: Hotel): number | null {
         </template>
         <div class="co-stats">
           <div class="co-stat"><div class="cs-v">{{ num(h.tau) }}</div><div class="cs-l">TAU</div></div>
-          <div class="co-stat"><div class="cs-v">{{ num(h.current_tenth) }}<span style="color: var(--faint)">/{{ num(h.contracted_tenths) }}</span></div><div class="cs-l">Décimas</div></div>
+          <div class="co-stat"><div class="cs-v">{{ h.stars ?? "—" }}</div><div class="cs-l">Estrellas</div></div>
           <div class="co-stat">
             <div class="cs-v" :class="h.deviation_pct == null ? '' : h.deviation_pct >= 0 ? 'pos' : 'neg'">
               {{ h.deviation_pct == null ? "—" : (h.deviation_pct >= 0 ? "+" : "") + num(h.deviation_pct) + "%" }}

@@ -10,7 +10,11 @@ import { ICONS } from "../lib/icons";
 import { DEAL_STAGES, OPEN_STAGES } from "../lib/types";
 import DealModal from "../components/deals/DealModal.vue";
 import ArchivedDealsModal from "../components/deals/ArchivedDealsModal.vue";
+import DealPreviewDrawer from "../components/deals/DealPreviewDrawer.vue";
+import Modal from "../components/ui/Modal.vue";
 import type { Deal } from "../lib/types";
+
+const NOTE_COLORS = ["#6366f1", "#059669", "#d97706", "#dc2626", "#7c3aed", "#0891b2"];
 
 const STAGNANT_DAYS = 14;
 const CLOSING_SOON_DAYS = 15;
@@ -70,6 +74,32 @@ async function moveDeal(deal: Deal, stage: string) {
     toast.show(stage === "Ganado" ? "Negocio ganado: " + deal.name : "Movido a " + stage);
   } catch (e) { toast.error(e, "mover el negocio"); }
 }
+
+const previewing = ref<Deal | null>(null);
+const noteEditing = ref<Deal | null>(null);
+const noteText = ref("");
+const noteColor = ref(NOTE_COLORS[0]);
+const savingNote = ref(false);
+
+function openPreview(d: Deal) { previewing.value = d; }
+function openNote(d: Deal) {
+  noteEditing.value = d;
+  noteText.value = d.quick_note ?? "";
+  noteColor.value = d.quick_note_color ?? NOTE_COLORS[0];
+}
+async function saveNote() {
+  if (!noteEditing.value) return;
+  savingNote.value = true;
+  try {
+    const { error } = await supabase.from("deals").update({ quick_note: noteText.value.trim() || null, quick_note_color: noteColor.value }).eq("id", noteEditing.value.id);
+    if (error) throw error;
+    noteEditing.value.quick_note = noteText.value.trim() || null;
+    noteEditing.value.quick_note_color = noteColor.value;
+    toast.show("Nota guardada");
+    noteEditing.value = null;
+  } catch (e) { toast.error(e, "guardar la nota"); }
+  finally { savingNote.value = false; }
+}
 </script>
 
 <template>
@@ -108,10 +138,17 @@ async function moveDeal(deal: Deal, stage: string) {
         @dragend="draggingId = null"
         @click="openEdit(d)"
       >
-        <div class="d-title">{{ d.name }}</div>
+        <div class="d-top">
+          <div class="d-title">{{ d.name }}</div>
+          <div class="row-actions">
+            <button class="mini-btn" title="Vista previa" @click.stop="openPreview(d)" v-html="ICONS.eye"></button>
+            <button class="mini-btn" title="Nota rápida" :style="d.quick_note_color ? { color: d.quick_note_color } : {}" @click.stop="openNote(d)" v-html="ICONS.note"></button>
+          </div>
+        </div>
         <div class="d-company">
           {{ d.contacts?.name || "Sin contacto" }}{{ (d.deals_hotels || []).length ? " · " + d.deals_hotels!.length + " hotel" + (d.deals_hotels!.length > 1 ? "es" : "") : "" }}
         </div>
+        <div v-if="d.quick_note" class="d-note" :style="{ borderColor: d.quick_note_color || 'var(--line)' }">{{ d.quick_note }}</div>
         <div class="value-bar"><i :style="{ width: Math.max(6, Math.round(((d.value || 0) / maxAmount) * 100)) + '%' }"></i></div>
         <div class="d-foot"><span class="d-amount">{{ eur(d.value) }}</span><span class="d-date">{{ fdate(d.closing_date) }}</span></div>
         <div v-if="closingSoonDays(d) != null" class="d-soon"><span class="icon-inline" v-html="ICONS.calendar"></span>cierra en {{ closingSoonDays(d) }} día{{ closingSoonDays(d) === 1 ? "" : "s" }}</div>
@@ -122,4 +159,27 @@ async function moveDeal(deal: Deal, stage: string) {
 
   <DealModal v-if="showModal" :deal="editing" @close="showModal = false" @saved="onSaved" />
   <ArchivedDealsModal v-if="showArchived" @close="showArchived = false" @edit="openFromArchived" />
+  <DealPreviewDrawer v-if="previewing" :deal="previewing" @close="previewing = null" />
+  <Modal v-if="noteEditing" width="380px" @close="noteEditing = null">
+    <h2>Nota rápida</h2>
+    <div class="field"><label>Resumen</label><textarea v-model="noteText" placeholder="Qué hay que recordar de este negocio..."></textarea></div>
+    <div class="field">
+      <label>Color</label>
+      <div style="display: flex; gap: 8px">
+        <button
+          v-for="c in NOTE_COLORS"
+          :key="c"
+          type="button"
+          class="color-swatch"
+          :class="{ selected: noteColor === c }"
+          :style="{ background: c }"
+          @click="noteColor = c"
+        ></button>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" @click="noteEditing = null">Cancelar</button>
+      <button class="btn btn-primary" :disabled="savingNote" @click="saveNote">{{ savingNote ? "Guardando..." : "Guardar" }}</button>
+    </div>
+  </Modal>
 </template>
