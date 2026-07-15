@@ -7,7 +7,7 @@ import { useCatalogStore } from "../stores/catalogs";
 import { useToastStore } from "../stores/toast";
 import { useConfirmStore } from "../stores/confirm";
 import { supabase } from "../lib/supabase";
-import { num } from "../lib/format";
+import { num, initials } from "../lib/format";
 import { fetchAllFiltered } from "../lib/fetchAll";
 import { downloadCsv } from "../lib/csvExport";
 import { useDeepLinkFetch } from "../composables/useDeepLinkOpen";
@@ -31,9 +31,13 @@ const { rows, pager, fetchPage, setSearch, setFilters, setSort, setPage, setPage
   "name",
 );
 
-const clientFilter = ref("");
-function applyClientFilter() {
-  setFilters(clientFilter.value === "" ? [] : [{ col: "is_client", op: "eq", value: clientFilter.value === "true" }]);
+const clientTab = ref<"todos" | "cliente" | "no-cliente">("todos");
+function setClientTab(tab: "todos" | "cliente" | "no-cliente") {
+  clientTab.value = tab;
+  setFilters(tab === "todos" ? [] : [{ col: "is_client", op: "eq", value: tab === "cliente" }]);
+}
+function hotelInitial(name: string): string {
+  return (name || "?").replace(/^[^\p{L}\p{N}]+/u, "").charAt(0).toUpperCase() || "?";
 }
 
 const exporting = ref(false);
@@ -85,10 +89,6 @@ async function onDelete(h: Hotel) {
   } catch (e) { toast.error(e, "eliminar el hotel"); }
 }
 function onSort(c: ColumnDef<Hotel>) { if (c.dbCol) setSort(c.dbCol); }
-function progress(h: Hotel) {
-  if (!h.objective || h.current_ij == null) return null;
-  return Math.min(100, Math.max(0, (h.current_ij / h.objective) * 100));
-}
 </script>
 
 <template>
@@ -100,11 +100,6 @@ function progress(h: Hotel) {
       </div>
     </div>
     <div style="display: flex; gap: 9px; align-items: center">
-      <select v-model="clientFilter" class="filter-select" @change="applyClientFilter">
-        <option value="">Todos</option>
-        <option value="true">Cliente</option>
-        <option value="false">No cliente</option>
-      </select>
       <ViewControls v-model:mode="viewMode" @columns="showColEditor = true" />
       <button class="btn btn-ghost" :disabled="exporting" @click="exportCsv">{{ exporting ? "Exportando..." : "Exportar CSV" }}</button>
       <button class="btn btn-primary" @click="openNew">
@@ -112,6 +107,18 @@ function progress(h: Hotel) {
         Nuevo hotel
       </button>
     </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn" :class="{ active: clientTab === 'todos' }" @click="setClientTab('todos')">
+      Todos <span class="tab-count">{{ catalogs.counts.hotels.toLocaleString("es-ES") }}</span>
+    </button>
+    <button class="tab-btn" :class="{ active: clientTab === 'cliente' }" @click="setClientTab('cliente')">
+      Con cliente <span class="tab-count">{{ catalogs.counts.hotelsClient.toLocaleString("es-ES") }}</span>
+    </button>
+    <button class="tab-btn" :class="{ active: clientTab === 'no-cliente' }" @click="setClientTab('no-cliente')">
+      Sin cliente <span class="tab-count">{{ (catalogs.counts.hotels - catalogs.counts.hotelsClient).toLocaleString("es-ES") }}</span>
+    </button>
   </div>
 
   <template v-if="viewMode === 'list'">
@@ -127,9 +134,34 @@ function progress(h: Hotel) {
         @delete="onDelete"
       >
         <template #cell-name="{ row }">
-          <div class="cell-person"><span class="avatar">{{ row.name.slice(0, 2).toUpperCase() }}</span><span class="p-name">{{ row.name }}</span></div>
+          <div class="cell-person">
+            <span class="hc-avatar hc-avatar-sm" :class="{ client: row.is_client }">{{ hotelInitial(row.name) }}</span>
+            <div><div class="p-name">{{ row.name }}</div><div class="p-sub">ID {{ row.jaippy_id ?? row.id }}</div></div>
+          </div>
         </template>
-        <template #cell-is_client="{ row }"><span class="badge" :class="row.is_client ? 'on' : 'off'">{{ row.is_client ? "Cliente" : "No cliente" }}</span></template>
+        <template #cell-current_ij="{ row }">
+          <span v-if="row.current_ij != null" class="hc-ij" :class="row.current_ij >= 8 ? 'good' : 'bad'">{{ num(row.current_ij, 2) }}</span>
+          <span v-else>—</span>
+        </template>
+        <template #cell-stars="{ row }">
+          <span v-if="row.stars" class="hc-stars"><span v-for="i in 5" :key="i" :class="{ on: i <= row.stars! }">★</span></span>
+          <span v-else>—</span>
+        </template>
+        <template #cell-booking_url="{ row }">
+          <a v-if="row.booking_url" class="mini-btn" :href="row.booking_url" target="_blank" rel="noopener" title="Ver en Booking" @click.stop>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M6 5H4v15h15v-2"/></svg>
+          </a>
+          <span v-else>—</span>
+        </template>
+        <template #cell-is_client="{ row }">
+          <template v-if="row.is_client">
+            <span class="hc-client-dot"></span> Cliente
+            <div class="hc-team" style="display: inline-flex; margin-left: 8px; vertical-align: middle">
+              <span v-for="a in (row.hotels_personnel || []).slice(0, 3)" :key="a.personnel?.id" class="hc-team-chip" :title="a.personnel?.name">{{ initials(a.personnel?.name) }}</span>
+            </div>
+          </template>
+          <span v-else class="badge off">Sin cliente</span>
+        </template>
         <template #cell-is_chain="{ row }">{{ row.is_chain ? "Sí" : "No" }}</template>
         <template #cell-equipo="{ row }">{{ (row.hotels_personnel || []).length }}</template>
       </DataTable>
@@ -140,7 +172,7 @@ function progress(h: Hotel) {
 
   <template v-else>
     <div class="co-grid">
-      <div v-for="h in rows" :key="h.id" class="card co-card" @click="openEdit(h)">
+      <div v-for="h in rows" :key="h.id" class="card co-card hotel-card" @click="openEdit(h)">
         <div class="row-actions">
           <button class="mini-btn" title="Editar" @click.stop="openEdit(h)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19.5 8.5a2.1 2.1 0 0 0-3-3L5 17v3z"/></svg>
@@ -149,15 +181,26 @@ function progress(h: Hotel) {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6.5 7l1 13h9l1-13"/></svg>
           </button>
         </div>
-        <div class="co-name">{{ h.name }}<span class="badge" :class="h.is_client ? 'on' : 'off'">{{ h.is_client ? "Cliente" : "No cliente" }}</span></div>
-        <div class="co-sector">{{ (h.hotels_personnel || []).length }} personas asignadas</div>
-        <template v-if="progress(h) != null">
-          <div class="plan-bar"><i :style="{ width: Math.round(progress(h)!) + '%' }"></i></div>
-          <div class="plan-meta"><span>IJ {{ num(h.current_ij) }}</span><span>objetivo {{ num(h.objective) }}</span></div>
-        </template>
-        <div class="co-stats">
-          <div class="co-stat"><div class="cs-v">{{ num(h.tau) }}</div><div class="cs-l">TAU</div></div>
-          <div class="co-stat"><div class="cs-v">{{ h.stars ?? "—" }}</div><div class="cs-l">Estrellas</div></div>
+        <div class="hc-top">
+          <div class="hc-avatar" :class="{ client: h.is_client }">{{ hotelInitial(h.name) }}</div>
+          <span v-if="h.current_ij != null" class="hc-ij" :class="h.current_ij >= 8 ? 'good' : 'bad'">{{ num(h.current_ij, 2) }}</span>
+        </div>
+        <div class="hc-name">{{ h.name }}</div>
+        <div class="hc-meta">
+          <span v-if="h.stars" class="hc-stars">
+            <span v-for="i in 5" :key="i" :class="{ on: i <= h.stars! }">★</span>
+          </span>
+          <span v-if="h.city">{{ h.city }}, ES</span>
+        </div>
+        <div class="hc-foot">
+          <template v-if="h.is_client">
+            <span class="hc-client-dot"></span>
+            <span class="hc-client-label">Cliente</span>
+            <div class="hc-team">
+              <span v-for="a in (h.hotels_personnel || []).slice(0, 3)" :key="a.personnel?.id" class="hc-team-chip" :title="a.personnel?.name">{{ initials(a.personnel?.name) }}</span>
+            </div>
+          </template>
+          <span v-else class="badge off">Sin cliente</span>
         </div>
       </div>
       <div v-if="!rows.length" class="card empty" style="grid-column: 1 / -1"><div class="e-title">Sin hoteles</div><p>Crea el primer hotel para empezar.</p></div>
