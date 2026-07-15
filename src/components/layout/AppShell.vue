@@ -11,7 +11,6 @@ import { supabase } from "../../lib/supabase";
 import type { Message, Task } from "../../lib/types";
 
 const WIDE_VIEWS = ["negocios", "tickets", "tablero", "cartera", "chat", "calendario", "hoteles", "contactos", "empresas", "personal"];
-const DEVIATION_THRESHOLD = 15;
 
 const catalogs = useCatalogStore();
 const toast = useToastStore();
@@ -22,19 +21,6 @@ let notificationsChannel: ReturnType<typeof supabase.channel> | null = null;
 
 onMounted(async () => {
   await Promise.all([catalogs.loadCounts(), catalogs.loadCatalogs()]);
-  try {
-    const count = await catalogs.countDeviationAlerts(DEVIATION_THRESHOLD);
-    if (count > 0) {
-      toast.show(
-        count === 1
-          ? `1 hotel se ha desviado más de ${DEVIATION_THRESHOLD}% de su plan`
-          : `${count} hoteles se han desviado más de ${DEVIATION_THRESHOLD}% de su plan`,
-        6000,
-      );
-    }
-  } catch {
-    // silencioso: no bloquea el arranque de la app si falla la comprobación
-  }
 
   const myPersonnel = catalogs.personnel.find((p) => p.email?.toLowerCase() === auth.userEmail.toLowerCase());
   notificationsChannel = supabase

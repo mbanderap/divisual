@@ -15,12 +15,9 @@ const catalogs = useCatalogStore();
 
 const name = ref(props.hotel?.name ?? "");
 const isClient = ref(String(props.hotel?.is_client ?? false));
-const planEndDate = ref(props.hotel?.plan_end_date ?? "");
 const tau = ref<string>(props.hotel?.tau != null ? String(props.hotel.tau) : "");
 const currentIj = ref<string>(props.hotel?.current_ij != null ? String(props.hotel.current_ij) : "");
 const objective = ref<string>(props.hotel?.objective != null ? String(props.hotel.objective) : "");
-const deviationDays = ref<string>(props.hotel?.deviation_days != null ? String(props.hotel.deviation_days) : "");
-const deviationPct = ref<string>(props.hotel?.deviation_pct != null ? String(props.hotel.deviation_pct) : "");
 const jaippyId = ref<string>(props.hotel?.jaippy_id != null ? String(props.hotel.jaippy_id) : "");
 const incomeCurrentMonth = ref<string>(props.hotel?.income_current_month != null ? String(props.hotel.income_current_month) : "");
 const incomeNextMonth = ref<string>(props.hotel?.income_next_month != null ? String(props.hotel.income_next_month) : "");
@@ -71,9 +68,8 @@ async function save() {
   saving.value = true;
   try {
     const row = {
-      name: name.value.trim(), is_client: isClient.value === "true", plan_end_date: nn(planEndDate.value),
+      name: name.value.trim(), is_client: isClient.value === "true",
       tau: nnum(tau.value), current_ij: nnum(currentIj.value), objective: nnum(objective.value),
-      deviation_days: deviationDays.value === "" ? null : parseInt(deviationDays.value), deviation_pct: nnum(deviationPct.value),
       updated_at: new Date().toISOString(),
       jaippy_id: jaippyId.value === "" ? null : parseInt(jaippyId.value),
       income_current_month: nnum(incomeCurrentMonth.value), income_next_month: nnum(incomeNextMonth.value),
@@ -122,18 +118,11 @@ async function save() {
     </div>
     <div class="field"><label>URL booking</label><input v-model="bookingUrl" type="text" placeholder="https://..." /></div>
     <div class="field"><label>Descripción del hotel</label><textarea v-model="description" placeholder="Descripción libre"></textarea></div>
-    <div class="field-row">
-      <div class="field"><label>Cliente</label><select v-model="isClient"><option value="true">Sí</option><option value="false">No</option></select></div>
-      <div class="field"><label>Fin del plan</label><input v-model="planEndDate" type="date" /></div>
-    </div>
+    <div class="field"><label>Cliente</label><select v-model="isClient"><option value="true">Sí</option><option value="false">No</option></select></div>
     <div class="field-row-3">
       <div class="field"><label>TAU</label><input v-model="tau" type="number" /></div>
       <div class="field"><label>IJ actual</label><input v-model="currentIj" type="number" /></div>
       <div class="field"><label>Objetivo</label><input v-model="objective" type="number" /></div>
-    </div>
-    <div class="field-row">
-      <div class="field"><label>Desviación (días)</label><input v-model="deviationDays" type="number" /></div>
-      <div class="field"><label>Desviación (%)</label><input v-model="deviationPct" type="number" /></div>
     </div>
     <div class="field-row">
       <div class="field"><label>Ingresos mes actual</label><input v-model="incomeCurrentMonth" type="number" /></div>

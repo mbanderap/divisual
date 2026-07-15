@@ -42,9 +42,6 @@ function importe(h: Hotel): number {
   const deal = won?.deals ?? links[0]?.deals;
   return deal?.value ?? 0;
 }
-function diasRestantes(dateStr: string): number {
-  return Math.ceil((new Date(dateStr).getTime() - Date.now()) / 86400000);
-}
 function fdateShort(iso: string | null | undefined): string {
   return iso ? new Date(iso).toLocaleDateString("es-ES") : "—";
 }
@@ -52,10 +49,9 @@ function openTicketsCount(h: Hotel): number {
   return catalogs.tickets.filter((t) => t.hotel_id === h.id && t.status !== "Cierre de ciclo").length;
 }
 function riskLevel(h: Hotel): "alto" | "medio" | "bajo" {
-  const dev = Math.abs(h.deviation_days ?? 0);
   const openT = openTicketsCount(h);
-  if (dev > 90 || openT >= 2) return "alto";
-  if (dev > 60 || openT === 1) return "medio";
+  if (openT >= 2) return "alto";
+  if (openT === 1) return "medio";
   return "bajo";
 }
 const RISK_LABEL: Record<string, string> = { alto: "Riesgo alto", medio: "Riesgo medio", bajo: "Riesgo bajo" };
@@ -65,12 +61,7 @@ const tab = ref<"resumen" | "tickets">("resumen");
 // --- Resumen ---
 const ticketsActivos = computed(() => catalogs.tickets.filter((t) => t.status !== "Cierre de ciclo").length);
 const enConsolidacion = computed(() => catalogs.tickets.filter((t) => t.status === "Consolidación").length);
-const enRiesgo = computed(() => rows.value.filter((h) => (h.deviation_days ?? 0) > 90).length);
-const finPlanRows = computed(() =>
-  rows.value
-    .filter((h) => h.plan_end_date && diasRestantes(h.plan_end_date) <= 30)
-    .sort((a, b) => diasRestantes(a.plan_end_date!) - diasRestantes(b.plan_end_date!)),
-);
+const enRiesgo = computed(() => rows.value.filter((h) => openTicketsCount(h) >= 2).length);
 const sinImporte = computed(() => rows.value.filter((h) => importe(h) === 0).length);
 
 const recentChanges = computed(() =>
@@ -109,8 +100,7 @@ const visible = computed(() => {
     <div class="kpis-flow">
       <div class="card kpi"><div class="k-label">Tickets activos</div><div class="k-value">{{ ticketsActivos }}</div><div class="k-delta">en pipeline CS</div></div>
       <div class="card kpi"><div class="k-label">En consolidación</div><div class="k-value">{{ enConsolidacion }}</div><div class="k-delta">periodo activo</div></div>
-      <div class="card kpi"><div class="k-label">En riesgo</div><div class="k-value">{{ enRiesgo }}</div><div class="k-delta">desviación &gt;3 meses</div></div>
-      <div class="card kpi"><div class="k-label">Fin plan &lt;30 días</div><div class="k-value">{{ finPlanRows.length }}</div><div class="k-delta">hoteles urgentes</div></div>
+      <div class="card kpi"><div class="k-label">En riesgo</div><div class="k-value">{{ enRiesgo }}</div><div class="k-delta">2+ tickets abiertos</div></div>
       <div class="card kpi"><div class="k-label">Sin importe</div><div class="k-value">{{ sinImporte }}</div><div class="k-delta">tickets incompletos</div></div>
     </div>
 
@@ -133,23 +123,6 @@ const visible = computed(() => {
       </div>
     </div>
 
-    <div class="card panel">
-      <div class="panel-title">Fin de plan urgente<span class="hint">30 días o menos, o ya vencidos</span></div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Hotel</th><th>Fin plan</th><th>Días</th><th>Estado</th></tr></thead>
-          <tbody>
-            <tr v-for="h in finPlanRows" :key="h.id">
-              <td>{{ h.name }}</td>
-              <td class="num">{{ fdateShort(h.plan_end_date) }}</td>
-              <td class="num" :class="diasRestantes(h.plan_end_date!) < 0 ? 'neg' : 'pos'">{{ diasRestantes(h.plan_end_date!) }}</td>
-              <td :class="diasRestantes(h.plan_end_date!) < 0 ? 'neg' : 'pos'">{{ diasRestantes(h.plan_end_date!) < 0 ? "Vencido" : "Próximo" }}</td>
-            </tr>
-          </tbody>
-        </table>
-        <div v-if="!finPlanRows.length" class="empty" style="padding: 24px"><p>Ningún hotel con el fin de plan cerca.</p></div>
-      </div>
-    </div>
   </template>
 
   <template v-else>

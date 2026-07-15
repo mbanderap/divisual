@@ -7,8 +7,7 @@ import { useCatalogStore } from "../stores/catalogs";
 import { useToastStore } from "../stores/toast";
 import { useConfirmStore } from "../stores/confirm";
 import { supabase } from "../lib/supabase";
-import { fdate, num } from "../lib/format";
-import { ICONS } from "../lib/icons";
+import { num } from "../lib/format";
 import { fetchAllFiltered } from "../lib/fetchAll";
 import { downloadCsv } from "../lib/csvExport";
 import { useDeepLinkFetch } from "../composables/useDeepLinkOpen";
@@ -49,7 +48,6 @@ async function exportCsv() {
         if (c.key === "equipo") row[c.label] = (h.hotels_personnel || []).length;
         else if (c.key === "is_client") row[c.label] = h.is_client ? "Sí" : "No";
         else if (c.key === "is_chain") row[c.label] = h.is_chain ? "Sí" : "No";
-        else if (c.key === "plan_end_date") row[c.label] = fdate(h.plan_end_date);
         else row[c.label] = (h as unknown as Record<string, unknown>)[c.dbCol ?? c.key];
       }
       return row;
@@ -90,12 +88,6 @@ function onSort(c: ColumnDef<Hotel>) { if (c.dbCol) setSort(c.dbCol); }
 function progress(h: Hotel) {
   if (!h.objective || h.current_ij == null) return null;
   return Math.min(100, Math.max(0, (h.current_ij / h.objective) * 100));
-}
-const PLAN_ENDING_SOON_DAYS = 30;
-function planEndingSoonDays(h: Hotel): number | null {
-  if (!h.is_client || !h.plan_end_date) return null;
-  const days = Math.ceil((new Date(h.plan_end_date).getTime() - Date.now()) / 86400000);
-  return days >= 0 && days <= PLAN_ENDING_SOON_DAYS ? days : null;
 }
 </script>
 
@@ -139,20 +131,11 @@ function planEndingSoonDays(h: Hotel): number | null {
         </template>
         <template #cell-is_client="{ row }"><span class="badge" :class="row.is_client ? 'on' : 'off'">{{ row.is_client ? "Cliente" : "No cliente" }}</span></template>
         <template #cell-is_chain="{ row }">{{ row.is_chain ? "Sí" : "No" }}</template>
-        <template #cell-deviation_days="{ row }">
-          <span v-if="row.deviation_days == null">—</span>
-          <span v-else :class="row.deviation_days > 0 ? 'neg' : 'pos'">{{ row.deviation_days }}</span>
-        </template>
-        <template #cell-deviation_pct="{ row }">
-          <span v-if="row.deviation_pct == null">—</span>
-          <span v-else :class="row.deviation_pct >= 0 ? 'pos' : 'neg'">{{ row.deviation_pct >= 0 ? "+" : "" }}{{ num(row.deviation_pct) }}</span>
-        </template>
-        <template #cell-plan_end_date="{ row }">{{ fdate(row.plan_end_date) }}</template>
         <template #cell-equipo="{ row }">{{ (row.hotels_personnel || []).length }}</template>
       </DataTable>
       <Pager :page="pager.page" :page-size="pager.pageSize" :total="pager.total" @update:page="setPage" @update:page-size="setPageSize" />
     </template>
-    <div v-else class="card empty"><div class="e-title">Sin hoteles</div><p>Crea el primer hotel para empezar a seguir sus planes.</p></div>
+    <div v-else class="card empty"><div class="e-title">Sin hoteles</div><p>Crea el primer hotel para empezar.</p></div>
   </template>
 
   <template v-else>
@@ -167,8 +150,7 @@ function planEndingSoonDays(h: Hotel): number | null {
           </button>
         </div>
         <div class="co-name">{{ h.name }}<span class="badge" :class="h.is_client ? 'on' : 'off'">{{ h.is_client ? "Cliente" : "No cliente" }}</span></div>
-        <div class="co-sector">{{ (h.hotels_personnel || []).length }} personas asignadas{{ h.plan_end_date ? " · plan hasta " + fdate(h.plan_end_date) : "" }}</div>
-        <div v-if="planEndingSoonDays(h) != null" class="d-soon"><span class="icon-inline" v-html="ICONS.calendar"></span>el plan vence en {{ planEndingSoonDays(h) }} día{{ planEndingSoonDays(h) === 1 ? "" : "s" }}</div>
+        <div class="co-sector">{{ (h.hotels_personnel || []).length }} personas asignadas</div>
         <template v-if="progress(h) != null">
           <div class="plan-bar"><i :style="{ width: Math.round(progress(h)!) + '%' }"></i></div>
           <div class="plan-meta"><span>IJ {{ num(h.current_ij) }}</span><span>objetivo {{ num(h.objective) }}</span></div>
@@ -176,15 +158,9 @@ function planEndingSoonDays(h: Hotel): number | null {
         <div class="co-stats">
           <div class="co-stat"><div class="cs-v">{{ num(h.tau) }}</div><div class="cs-l">TAU</div></div>
           <div class="co-stat"><div class="cs-v">{{ h.stars ?? "—" }}</div><div class="cs-l">Estrellas</div></div>
-          <div class="co-stat">
-            <div class="cs-v" :class="h.deviation_pct == null ? '' : h.deviation_pct >= 0 ? 'pos' : 'neg'">
-              {{ h.deviation_pct == null ? "—" : (h.deviation_pct >= 0 ? "+" : "") + num(h.deviation_pct) + "%" }}
-            </div>
-            <div class="cs-l">Desviación</div>
-          </div>
         </div>
       </div>
-      <div v-if="!rows.length" class="card empty" style="grid-column: 1 / -1"><div class="e-title">Sin hoteles</div><p>Crea el primer hotel para empezar a seguir sus planes.</p></div>
+      <div v-if="!rows.length" class="card empty" style="grid-column: 1 / -1"><div class="e-title">Sin hoteles</div><p>Crea el primer hotel para empezar.</p></div>
     </div>
     <Pager v-if="rows.length" :page="pager.page" :page-size="pager.pageSize" :total="pager.total" @update:page="setPage" @update:page-size="setPageSize" />
   </template>

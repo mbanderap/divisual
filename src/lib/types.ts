@@ -127,9 +127,6 @@ export interface Hotel {
   tau: number | null;
   current_ij: number | null;
   objective: number | null;
-  deviation_days: number | null;
-  deviation_pct: number | null;
-  plan_end_date: string | null;
   updated_at: string | null;
   jaippy_id: number | null;
   income_current_month: number | null;

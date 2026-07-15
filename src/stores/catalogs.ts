@@ -1,5 +1,4 @@
 import { defineStore } from "pinia";
-import { supabase } from "../lib/supabase";
 import { fetchAllRows, countRows } from "../lib/fetchAll";
 import type { Deal, Personnel, Tag, BillingModel, Ticket, Task, Story, Sprint, TaskLabel, CalendarEvent, Profile } from "../lib/types";
 
@@ -77,15 +76,6 @@ export const useCatalogStore = defineStore("catalogs", {
     },
     async refreshCatalogsAndCounts() {
       await Promise.all([this.loadCatalogs(), this.loadCounts()]);
-    },
-    async countDeviationAlerts(threshold = 15) {
-      const { data, error } = await supabase
-        .from("hotels")
-        .select("id")
-        .eq("is_client", true)
-        .or(`deviation_pct.gte.${threshold},deviation_pct.lte.${-threshold}`);
-      if (error) throw new Error(error.message);
-      return data?.length ?? 0;
     },
   },
 });
