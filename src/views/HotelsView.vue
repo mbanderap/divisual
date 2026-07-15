@@ -154,13 +154,15 @@ function onSort(c: ColumnDef<Hotel>) { if (c.dbCol) setSort(c.dbCol); }
           <span v-else>—</span>
         </template>
         <template #cell-is_client="{ row }">
-          <template v-if="row.is_client">
-            <span class="hc-client-dot"></span> Cliente
-            <div class="hc-team" style="display: inline-flex; margin-left: 8px; vertical-align: middle">
-              <span v-for="a in (row.hotels_personnel || []).slice(0, 3)" :key="a.personnel?.id" class="hc-team-chip" :title="a.personnel?.name">{{ initials(a.personnel?.name) }}</span>
-            </div>
-          </template>
-          <span v-else class="badge off">Sin cliente</span>
+          <div style="display: flex; align-items: center; gap: 8px">
+            <template v-if="row.is_client">
+              <span class="hc-client-chip"><span class="hc-client-dot"></span><span class="hc-client-label">Cliente</span></span>
+              <div class="hc-team">
+                <span v-for="a in (row.hotels_personnel || []).slice(0, 3)" :key="a.personnel?.id" class="hc-team-chip" :title="a.personnel?.name">{{ initials(a.personnel?.name) }}</span>
+              </div>
+            </template>
+            <span v-else class="badge off">Sin cliente</span>
+          </div>
         </template>
         <template #cell-is_chain="{ row }">{{ row.is_chain ? "Sí" : "No" }}</template>
         <template #cell-equipo="{ row }">{{ (row.hotels_personnel || []).length }}</template>
@@ -172,7 +174,7 @@ function onSort(c: ColumnDef<Hotel>) { if (c.dbCol) setSort(c.dbCol); }
 
   <template v-else>
     <div class="co-grid">
-      <div v-for="h in rows" :key="h.id" class="card co-card hotel-card" @click="openEdit(h)">
+      <div v-for="h in rows" :key="h.id" class="card co-card hotel-card" :class="{ 'is-client': h.is_client }" @click="openEdit(h)">
         <div class="row-actions">
           <button class="mini-btn" title="Editar" @click.stop="openEdit(h)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19.5 8.5a2.1 2.1 0 0 0-3-3L5 17v3z"/></svg>
@@ -194,8 +196,7 @@ function onSort(c: ColumnDef<Hotel>) { if (c.dbCol) setSort(c.dbCol); }
         </div>
         <div class="hc-foot">
           <template v-if="h.is_client">
-            <span class="hc-client-dot"></span>
-            <span class="hc-client-label">Cliente</span>
+            <span class="hc-client-chip"><span class="hc-client-dot"></span><span class="hc-client-label">Cliente</span></span>
             <div class="hc-team">
               <span v-for="a in (h.hotels_personnel || []).slice(0, 3)" :key="a.personnel?.id" class="hc-team-chip" :title="a.personnel?.name">{{ initials(a.personnel?.name) }}</span>
             </div>

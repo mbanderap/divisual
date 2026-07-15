@@ -30,8 +30,8 @@ function defaultCompanyColumns(): ColumnDef<Company>[] {
 function defaultHotelColumns(): ColumnDef<Hotel>[] {
   return [
     { key: "name", label: "Hotel", visible: true, dbCol: "name" },
-    { key: "current_ij", label: "IJ actual", visible: true, dbCol: "current_ij", numeric: true },
-    { key: "stars", label: "Estrellas", visible: true, dbCol: "stars", numeric: true },
+    { key: "current_ij", label: "IJ actual", visible: true, dbCol: "current_ij" },
+    { key: "stars", label: "Estrellas", visible: true, dbCol: "stars" },
     { key: "city", label: "Ciudad", visible: true, dbCol: "city" },
     { key: "booking_url", label: "Booking", visible: true, dbCol: "booking_url" },
     { key: "is_client", label: "Cliente", visible: true, dbCol: "is_client" },
