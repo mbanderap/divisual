@@ -51,12 +51,32 @@ function defaultHotelColumns(): ColumnDef<Hotel>[] {
   ];
 }
 
+// Reconcilia lo guardado en localStorage con las columnas actuales del
+// código: si quitamos o renombramos una columna, desaparece sola de lo
+// guardado en vez de quedarse colgada con datos viejos; si añadimos una
+// columna nueva, se incorpora sola. Solo se conserva del guardado la
+// visibilidad y el orden, todo lo demás (label, dbCol...) sale siempre
+// de la definición actual.
+function reconcile<T>(persisted: ColumnDef<T>[] | undefined, defaults: ColumnDef<T>[]): ColumnDef<T>[] {
+  if (!persisted) return defaults;
+  const remaining = new Map(defaults.map((d) => [d.key, d]));
+  const merged: ColumnDef<T>[] = [];
+  for (const p of persisted) {
+    const def = remaining.get(p.key);
+    if (!def) continue;
+    merged.push({ ...def, visible: p.visible });
+    remaining.delete(p.key);
+  }
+  merged.push(...remaining.values());
+  return merged;
+}
+
 function loadPersisted<T>(key: string, fallback: ColumnDef<T>[]): ColumnDef<T>[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return fallback;
     const parsed = JSON.parse(raw);
-    return parsed[key] ?? fallback;
+    return reconcile<T>(parsed[key], fallback);
   } catch {
     return fallback;
   }
