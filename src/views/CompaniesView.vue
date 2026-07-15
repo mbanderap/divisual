@@ -7,6 +7,7 @@ import { useCatalogStore } from "../stores/catalogs";
 import { useToastStore } from "../stores/toast";
 import { useConfirmStore } from "../stores/confirm";
 import { supabase } from "../lib/supabase";
+import { initials } from "../lib/format";
 import { fetchAllFiltered } from "../lib/fetchAll";
 import { downloadCsv } from "../lib/csvExport";
 import { useDeepLinkFetch } from "../composables/useDeepLinkOpen";
@@ -30,9 +31,13 @@ const { rows, pager, fetchPage, setSearch, setFilters, setSort, setPage, setPage
   "name",
 );
 
-const clientFilter = ref("");
-function applyClientFilter() {
-  setFilters(clientFilter.value === "" ? [] : [{ col: "client", op: "eq", value: clientFilter.value === "true" }]);
+const clientTab = ref<"todos" | "cliente" | "no-cliente">("todos");
+function setClientTab(tab: "todos" | "cliente" | "no-cliente") {
+  clientTab.value = tab;
+  setFilters(tab === "todos" ? [] : [{ col: "client", op: "eq", value: tab === "cliente" }]);
+}
+function companyInitial(name: string): string {
+  return (name || "?").replace(/^[^\p{L}\p{N}]+/u, "").charAt(0).toUpperCase() || "?";
 }
 
 const exporting = ref(false);
@@ -59,6 +64,7 @@ async function exportCsv() {
 onMounted(() => {
   search.register(setSearch, pager.search, "Buscar empresas por nombre o categoría");
   fetchPage();
+  if (!catalogs.counts.companies) catalogs.loadCounts();
 });
 onUnmounted(() => search.unregister());
 
@@ -88,14 +94,9 @@ function onSort(c: ColumnDef<Company>) { if (c.dbCol) setSort(c.dbCol); }
   <div class="view-head">
     <div>
       <h1>Empresas</h1>
-      <div class="view-sub">{{ pager.total.toLocaleString("es-ES") }} cuentas registradas{{ pager.search || pager.filters.length ? " · resultados filtrados" : "" }}</div>
+      <div class="view-sub">{{ pager.total.toLocaleString("es-ES") }} cuentas registradas · {{ catalogs.counts.companiesClient.toLocaleString("es-ES") }} clientes{{ pager.search || pager.filters.length ? " · resultados filtrados" : "" }}</div>
     </div>
     <div style="display: flex; gap: 9px; align-items: center">
-      <select v-model="clientFilter" class="filter-select" @change="applyClientFilter">
-        <option value="">Todas las relaciones</option>
-        <option value="true">Cliente</option>
-        <option value="false">No cliente</option>
-      </select>
       <ViewControls v-model:mode="viewMode" @columns="showColEditor = true" />
       <button class="btn btn-ghost" :disabled="exporting" @click="exportCsv">{{ exporting ? "Exportando..." : "Exportar CSV" }}</button>
       <button class="btn btn-primary" @click="openNew">
@@ -103,6 +104,18 @@ function onSort(c: ColumnDef<Company>) { if (c.dbCol) setSort(c.dbCol); }
         Nueva empresa
       </button>
     </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn" :class="{ active: clientTab === 'todos' }" @click="setClientTab('todos')">
+      Todos <span class="tab-count">{{ catalogs.counts.companies.toLocaleString("es-ES") }}</span>
+    </button>
+    <button class="tab-btn" :class="{ active: clientTab === 'cliente' }" @click="setClientTab('cliente')">
+      Con cliente <span class="tab-count">{{ catalogs.counts.companiesClient.toLocaleString("es-ES") }}</span>
+    </button>
+    <button class="tab-btn" :class="{ active: clientTab === 'no-cliente' }" @click="setClientTab('no-cliente')">
+      Sin cliente <span class="tab-count">{{ (catalogs.counts.companies - catalogs.counts.companiesClient).toLocaleString("es-ES") }}</span>
+    </button>
   </div>
 
   <template v-if="viewMode === 'list'">
@@ -119,11 +132,21 @@ function onSort(c: ColumnDef<Company>) { if (c.dbCol) setSort(c.dbCol); }
       >
         <template #cell-name="{ row }">
           <div class="cell-person">
-            <span class="avatar">{{ row.name.slice(0, 2).toUpperCase() }}</span>
+            <span class="hc-avatar hc-avatar-sm" :class="{ client: row.client }">{{ companyInitial(row.name) }}</span>
             <span class="p-name">{{ row.name }}</span>
           </div>
         </template>
-        <template #cell-client="{ row }"><span class="badge" :class="row.client ? 'on' : 'off'">{{ row.client ? "Cliente" : "No cliente" }}</span></template>
+        <template #cell-client="{ row }">
+          <div style="display: flex; align-items: center; gap: 8px">
+            <template v-if="row.client">
+              <span class="hc-client-chip"><span class="hc-client-dot"></span><span class="hc-client-label">Cliente</span></span>
+              <div class="hc-team">
+                <span v-for="cc in (row.contacts_companies || []).slice(0, 3)" :key="cc.id" class="hc-team-chip" :title="cc.contacts?.name">{{ initials(cc.contacts?.name) }}</span>
+              </div>
+            </template>
+            <span v-else class="badge off">Sin cliente</span>
+          </div>
+        </template>
         <template #cell-contactos="{ row }">{{ (row.contacts_companies || []).length }}</template>
       </DataTable>
       <Pager :page="pager.page" :page-size="pager.pageSize" :total="pager.total" @update:page="setPage" @update:page-size="setPageSize" />
@@ -133,7 +156,7 @@ function onSort(c: ColumnDef<Company>) { if (c.dbCol) setSort(c.dbCol); }
 
   <template v-else>
     <div class="co-grid">
-      <div v-for="c in rows" :key="c.id" class="card co-card" @click="openEdit(c)">
+      <div v-for="c in rows" :key="c.id" class="card co-card entity-card" :class="{ 'is-client': c.client }" @click="openEdit(c)">
         <div class="row-actions">
           <button class="mini-btn" title="Editar" @click.stop="openEdit(c)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19.5 8.5a2.1 2.1 0 0 0-3-3L5 17v3z"/></svg>
@@ -142,10 +165,22 @@ function onSort(c: ColumnDef<Company>) { if (c.dbCol) setSort(c.dbCol); }
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6.5 7l1 13h9l1-13"/></svg>
           </button>
         </div>
-        <div class="co-name">{{ c.name }}<span class="badge" :class="c.client ? 'on' : 'off'">{{ c.client ? "Cliente" : "No cliente" }}</span></div>
-        <div class="co-sector">{{ c.category || "Sin categoría" }}{{ c.phone ? " · " + c.phone : "" }}</div>
-        <div class="co-stats">
-          <div class="co-stat"><div class="cs-v">{{ (c.contacts_companies || []).length }}</div><div class="cs-l">Contactos</div></div>
+        <div class="hc-top">
+          <div class="hc-avatar" :class="{ client: c.client }">{{ companyInitial(c.name) }}</div>
+        </div>
+        <div class="hc-name">{{ c.name }}</div>
+        <div class="hc-meta">
+          <span>{{ c.category || "Sin categoría" }}</span>
+          <span v-if="c.city">· {{ c.city }}</span>
+        </div>
+        <div class="hc-foot">
+          <template v-if="c.client">
+            <span class="hc-client-chip"><span class="hc-client-dot"></span><span class="hc-client-label">Cliente</span></span>
+            <div class="hc-team">
+              <span v-for="cc in (c.contacts_companies || []).slice(0, 3)" :key="cc.id" class="hc-team-chip" :title="cc.contacts?.name">{{ initials(cc.contacts?.name) }}</span>
+            </div>
+          </template>
+          <span v-else class="badge off">Sin cliente</span>
         </div>
       </div>
       <div v-if="!rows.length" class="card empty" style="grid-column: 1 / -1"><div class="e-title">Sin resultados</div><p>Ajusta la búsqueda o crea una empresa nueva.</p></div>

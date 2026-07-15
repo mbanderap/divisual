@@ -5,6 +5,7 @@ import type { Deal, Personnel, Tag, BillingModel, Ticket, Task, Story, Sprint, T
 interface Counts {
   contacts: number;
   companies: number;
+  companiesClient: number;
   hotels: number;
   hotelsClient: number;
   contactsCliente: number;
@@ -23,7 +24,8 @@ export const useCatalogStore = defineStore("catalogs", {
     profiles: [] as Profile[],
     tags: [] as Tag[],
     billing: [] as BillingModel[],
-    counts: { contacts: 0, companies: 0, hotels: 0, hotelsClient: 0, contactsCliente: 0 } as Counts,
+    counts: { contacts: 0, companies: 0, companiesClient: 0, hotels: 0, hotelsClient: 0, contactsCliente: 0 } as Counts,
+    lastLoadedAt: null as Date | null,
   }),
   getters: {
     openDealsCount: (state) => state.deals.filter((d) => d.status && ["Prospecto", "Contactado", "Propuesta", "Negociación"].includes(d.status)).length,
@@ -63,16 +65,18 @@ export const useCatalogStore = defineStore("catalogs", {
       this.tags = tags as Tag[];
       this.billing = billing as BillingModel[];
       this.profiles = profiles as Profile[];
+      this.lastLoadedAt = new Date();
     },
     async loadCounts() {
-      const [contacts, companies, hotels, hotelsClient, contactsCliente] = await Promise.all([
+      const [contacts, companies, companiesClient, hotels, hotelsClient, contactsCliente] = await Promise.all([
         countRows("contacts"),
         countRows("companies"),
+        countRows("companies", [["client", "eq", true]]),
         countRows("hotels"),
         countRows("hotels", [["is_client", "eq", true]]),
         countRows("contacts", [["lead_status", "eq", "Cliente"]]),
       ]);
-      this.counts = { contacts, companies, hotels, hotelsClient, contactsCliente };
+      this.counts = { contacts, companies, companiesClient, hotels, hotelsClient, contactsCliente };
     },
     async refreshCatalogsAndCounts() {
       await Promise.all([this.loadCatalogs(), this.loadCounts()]);

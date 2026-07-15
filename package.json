@@ -8,7 +8,9 @@
     "build": "vue-tsc -b && vite build",
     "preview": "vite preview",
     "fetch:hoteles": "node scripts/fetch-hoteles-jaippy.mjs",
-    "import:hoteles": "node scripts/import-hoteles-to-divisual.mjs"
+    "import:hoteles": "node scripts/import-hoteles-to-divisual.mjs",
+    "import:empresas": "node scripts/import-companies-csv.mjs",
+    "import:contactos": "node scripts/import-contacts-csv.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.1",

@@ -7,6 +7,16 @@ export interface Company {
   phone: string | null;
   client: boolean | null;
   category: string | null;
+  hubspot_id: number | null;
+  tax_id: string | null;
+  legal_name: string | null;
+  address: string | null;
+  city: string | null;
+  postal_code: string | null;
+  province: string | null;
+  country: string | null;
+  website_url: string | null;
+  description: string | null;
   contacts_companies?: { id: number; role: string | null; contacts?: { id: number; name: string } }[];
 }
 
@@ -39,6 +49,7 @@ export interface Contact {
   mobile_phone: string | null;
   email: string | null;
   lead_status: string | null;
+  hubspot_id: number | null;
   creation_date: string | null;
   last_update: string | null;
   contacts_companies?: ContactCompanyLink[];

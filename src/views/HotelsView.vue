@@ -174,7 +174,7 @@ function onSort(c: ColumnDef<Hotel>) { if (c.dbCol) setSort(c.dbCol); }
 
   <template v-else>
     <div class="co-grid">
-      <div v-for="h in rows" :key="h.id" class="card co-card hotel-card" :class="{ 'is-client': h.is_client }" @click="openEdit(h)">
+      <div v-for="h in rows" :key="h.id" class="card co-card entity-card" :class="{ 'is-client': h.is_client }" @click="openEdit(h)">
         <div class="row-actions">
           <button class="mini-btn" title="Editar" @click.stop="openEdit(h)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19.5 8.5a2.1 2.1 0 0 0-3-3L5 17v3z"/></svg>

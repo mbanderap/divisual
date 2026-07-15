@@ -25,6 +25,14 @@ function defaultCompanyColumns(): ColumnDef<Company>[] {
     { key: "category", label: "Categoría", visible: true, dbCol: "category" },
     { key: "phone", label: "Teléfono", visible: true, dbCol: "phone", numeric: true },
     { key: "contactos", label: "Contactos", visible: true, numeric: true },
+    { key: "city", label: "Ciudad", visible: true, dbCol: "city" },
+    { key: "province", label: "Provincia", visible: false, dbCol: "province" },
+    { key: "country", label: "País", visible: false, dbCol: "country" },
+    { key: "postal_code", label: "Código postal", visible: false, dbCol: "postal_code" },
+    { key: "tax_id", label: "NIF", visible: false, dbCol: "tax_id" },
+    { key: "legal_name", label: "Razón social", visible: false, dbCol: "legal_name" },
+    { key: "website_url", label: "Web", visible: false, dbCol: "website_url" },
+    { key: "hubspot_id", label: "ID HubSpot", visible: false, dbCol: "hubspot_id", numeric: true },
   ];
 }
 function defaultHotelColumns(): ColumnDef<Hotel>[] {
