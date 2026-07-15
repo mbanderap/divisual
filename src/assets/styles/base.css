@@ -269,7 +269,7 @@ tr.row-highlight:hover { background: var(--accent-soft); }
 
 .hotel-card { display: flex; flex-direction: column; border-left: 3px solid transparent; }
 .hotel-card.is-client { border-left-color: var(--accent); }
-.hc-top { display: flex; align-items: center; justify-content: space-between; }
+.hc-top { display: flex; align-items: center; justify-content: space-between; padding-right: 56px; }
 .hc-avatar { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; font-weight: 700; font-size: 14px; background: var(--surface-2); color: var(--muted); flex: none; }
 .hc-avatar-sm { width: 30px; height: 30px; border-radius: 8px; font-size: 12px; }
 .hc-avatar.client { background: var(--accent); color: #fff; }
