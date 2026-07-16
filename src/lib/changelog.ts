@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-07-16",
+    version: "v0.57",
+    title: "Usuarios (antes \"Personal\") ligado a cuentas reales",
+    description: "Se renombró Personal a Usuarios y se movió debajo de Changelog. Nueva tabla `profiles`, sincronizada con auth.users por trigger (el navegador no puede leer auth.users directamente), para saber quién tiene cuenta de verdad. El Chat y el filtro por persona del Calendario ya solo muestran usuarios con cuenta, no todo el directorio de Personal.",
+    status: "done",
+  },
+  {
+    date: "2026-07-16",
     version: "v0.56",
     title: "Marcar eventos del Calendario como finalizados",
     description: "En el detalle de un día, cada evento tiene un círculo que al pulsarlo lo marca como finalizado (se pone verde con un check, el título se tacha) sin tener que editar el evento. Se refleja también en las píldoras del mes.",
@@ -189,12 +196,6 @@ export const CHANGELOG: ChangelogEntry[] = [
     title: "El logo de divisual vuelve al Panel",
     description: "Al hacer clic en \"divisual\" arriba a la izquierda, ahora te lleva al Panel, como en cualquier app.",
     status: "done",
-  },
-  {
-    date: "2026-07-09",
-    title: "Usuarios (antes \"Personal\") ligado a cuentas reales",
-    description: "Se renombró Personal a Usuarios y se movió debajo de Changelog. Nueva tabla `profiles`, sincronizada con auth.users por trigger (el navegador no puede leer auth.users directamente), para saber quién tiene cuenta de verdad. El Chat y el filtro por persona del Calendario ya solo muestran usuarios con cuenta, no todo el directorio de Personal.",
-    status: "planned",
   },
   {
     date: "2026-07-09",
