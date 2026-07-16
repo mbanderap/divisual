@@ -16,7 +16,7 @@ const planned = computed(() => CHANGELOG.filter((c) => c.status === "planned"));
     <div class="card panel">
       <div class="panel-title">Hecho<span class="hint">{{ done.length }} entradas</span></div>
       <div v-for="c in done" :key="c.title" class="hist-item">
-        <span class="h-date">{{ fdate(c.date) }}</span>
+        <span class="h-date">{{ c.version ?? fdate(c.date) }}</span>
         <span class="h-note"><strong>{{ c.title }}</strong><br />{{ c.description }}</span>
       </div>
       <p v-if="!done.length" style="font-size: 12.5px; color: var(--faint)">Todavía no hay nada registrado.</p>
