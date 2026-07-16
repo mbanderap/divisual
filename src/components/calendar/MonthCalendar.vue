@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { ICONS } from "../../lib/icons";
-import { recurrenceMatchesDay } from "../../lib/recurrence";
-import type { Recurrence } from "../../lib/recurrence";
 import type { CalendarEvent } from "../../lib/types";
+import { categoryColor, eventOccursOn } from "../../lib/calendarCategory";
 
 const props = defineProps<{ events: CalendarEvent[] }>();
 const emit = defineEmits<{ dayClick: [string, CalendarEvent[]] }>();
@@ -13,16 +12,11 @@ const WEEKDAYS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
 function pad(n: number): string { return String(n).padStart(2, "0"); }
 function dateKey(d: Date): string { return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; }
-function categoryTag(category: string): string {
-  if (category === "Despliegue") return "oportunidad";
-  if (category === "Reunión") return "cliente";
-  if (category === "Vacaciones") return "lead";
-  if (category === "Formación") return "lead";
-  if (category === "Visita a hotel") return "oportunidad";
-  return "inactivo"; // Teletrabajo
-}
 
-const monthLabel = computed(() => current.value.toLocaleDateString("es-ES", { month: "long", year: "numeric" }));
+const monthLabel = computed(() => {
+  const s = current.value.toLocaleDateString("es-ES", { month: "long", year: "numeric" });
+  return s[0].toUpperCase() + s.slice(1);
+});
 const todayKey = dateKey(new Date());
 
 const gridDays = computed(() => {
@@ -39,14 +33,19 @@ const gridDays = computed(() => {
 });
 
 function eventsOnDay(key: string): CalendarEvent[] {
-  return props.events.filter((e) => {
-    if (e.recurrence) return recurrenceMatchesDay(key, e.recurrence as Recurrence, e.recurrence_day, e.start_date, e.end_date);
-    return key >= e.start_date && key <= (e.end_date || e.start_date);
-  });
+  return props.events.filter((e) => eventOccursOn(e, key));
 }
 function isCurrentMonth(d: Date): boolean {
   return d.getMonth() === current.value.getMonth();
 }
+const monthEventCount = computed(() => {
+  const ids = new Set<number>();
+  for (const d of gridDays.value) {
+    if (!isCurrentMonth(d)) continue;
+    for (const e of eventsOnDay(dateKey(d))) ids.add(e.id);
+  }
+  return ids.size;
+});
 function onDayClick(d: Date) {
   const key = dateKey(d);
   emit("dayClick", key, eventsOnDay(key));
@@ -58,7 +57,7 @@ function goToday() { current.value = new Date(); }
 
 <template>
   <div class="cal-head">
-    <div class="cal-month">{{ monthLabel }}</div>
+    <div class="cal-month">{{ monthLabel }} <span class="cal-count">· {{ monthEventCount }} evento{{ monthEventCount === 1 ? "" : "s" }}</span></div>
     <div style="display: flex; gap: 6px">
       <button class="icon-btn" title="Mes anterior" @click="prevMonth">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
@@ -83,9 +82,16 @@ function goToday() { current.value = new Date(); }
     >
       <div class="cal-daynum">{{ d.getDate() }}</div>
       <div class="cal-pills">
-        <span v-for="e in eventsOnDay(dateKey(d)).slice(0, 4)" :key="e.id" class="tag cal-pill" :class="categoryTag(e.category)"><span v-if="e.recurrence" class="icon-inline" v-html="ICONS.repeat"></span>{{ e.title }}</span>
+        <span v-for="e in eventsOnDay(dateKey(d)).slice(0, 4)" :key="e.id" class="cal-pill" :class="'cal-c-' + categoryColor(e.category)"><span v-if="e.recurrence" class="icon-inline" v-html="ICONS.repeat"></span><span v-if="e.start_time" class="cal-pill-time">{{ e.start_time.slice(0, 5) }}</span>{{ e.title }}</span>
         <span v-if="eventsOnDay(dateKey(d)).length > 4" class="cal-more">+{{ eventsOnDay(dateKey(d)).length - 4 }} más</span>
       </div>
     </div>
+  </div>
+
+  <div class="cal-legend">
+    <span class="cal-legend-item"><span class="cal-dot cal-c-blue"></span>Producción</span>
+    <span class="cal-legend-item"><span class="cal-dot cal-c-violet"></span>Reunión</span>
+    <span class="cal-legend-item"><span class="cal-dot cal-c-green"></span>Vacaciones</span>
+    <span class="cal-legend-item"><span class="cal-dot cal-c-orange"></span>Teletrabajo</span>
   </div>
 </template>

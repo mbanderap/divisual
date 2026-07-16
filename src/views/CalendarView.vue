@@ -4,6 +4,7 @@ import { useCatalogStore } from "../stores/catalogs";
 import MonthCalendar from "../components/calendar/MonthCalendar.vue";
 import DayDetailModal from "../components/calendar/DayDetailModal.vue";
 import EventModal from "../components/calendar/EventModal.vue";
+import { categoryColor, eventOccursOn, timeRangeLabel } from "../lib/calendarCategory";
 import type { CalendarEvent } from "../lib/types";
 
 const catalogs = useCatalogStore();
@@ -14,6 +15,7 @@ const TAB_CATEGORIES: Record<string, string[]> = {
   eventos: ["Reunión", "Formación", "Visita a hotel"],
   vacaciones: ["Vacaciones", "Teletrabajo"],
 };
+const TAB_LABELS: Record<string, string> = { tecnica: "Producción", eventos: "Reuniones", vacaciones: "Vacaciones / teletrabajo" };
 
 const filterOpen = ref(false);
 const filterIds = ref<number[]>([]);
@@ -27,11 +29,45 @@ function onFilterDocClick(e: MouseEvent) {
 onMounted(() => document.addEventListener("click", onFilterDocClick));
 onUnmounted(() => document.removeEventListener("click", onFilterDocClick));
 
+function matchesFilter(e: CalendarEvent): boolean {
+  return !filterIds.value.length || (e.events_personnel || []).some((l) => l.personnel && filterIds.value.includes(l.personnel.id));
+}
+
 const visibleEvents = computed(() =>
-  catalogs.events.filter((e) => {
-    if (!TAB_CATEGORIES[tab.value].includes(e.category)) return false;
-    if (filterIds.value.length && !(e.events_personnel || []).some((l) => l.personnel && filterIds.value.includes(l.personnel.id))) return false;
-    return true;
+  catalogs.events.filter((e) => TAB_CATEGORIES[tab.value].includes(e.category) && matchesFilter(e)),
+);
+
+function pad(n: number): string { return String(n).padStart(2, "0"); }
+function dateKey(d: Date): string { return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; }
+const today = new Date();
+const todayKey = dateKey(today);
+const todayLabel = (() => {
+  const s = today.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" });
+  return s[0].toUpperCase() + s.slice(1);
+})();
+
+const todaysEvents = computed(() =>
+  catalogs.events
+    .filter((e) => matchesFilter(e) && eventOccursOn(e, todayKey))
+    .sort((a, b) => (a.start_time ?? "99:99").localeCompare(b.start_time ?? "99:99")),
+);
+
+const weekStart = new Date(today);
+weekStart.setDate(today.getDate() - ((today.getDay() + 6) % 7));
+const weekDays = Array.from({ length: 7 }, (_, i) => {
+  const d = new Date(weekStart);
+  d.setDate(weekStart.getDate() + i);
+  return dateKey(d);
+});
+const weekStats = computed(() =>
+  (Object.keys(TAB_CATEGORIES) as (keyof typeof TAB_CATEGORIES)[]).map((key) => {
+    const ids = new Set<number>();
+    for (const day of weekDays) {
+      for (const e of catalogs.events) {
+        if (matchesFilter(e) && TAB_CATEGORIES[key].includes(e.category) && eventOccursOn(e, day)) ids.add(e.id);
+      }
+    }
+    return { key, label: TAB_LABELS[key], count: ids.size, color: categoryColor(TAB_CATEGORIES[key][0]) };
   }),
 );
 
@@ -83,8 +119,34 @@ function onSaved() { showEventModal.value = false; catalogs.loadCatalogs(); }
     <button class="tab-btn" :class="{ active: tab === 'vacaciones' }" @click="tab = 'vacaciones'">Vacaciones y teletrabajo</button>
   </div>
 
-  <div class="card cal-wrap">
-    <MonthCalendar :events="visibleEvents" @day-click="onDayClick" />
+  <div class="cal-layout">
+    <div class="card cal-wrap">
+      <MonthCalendar :events="visibleEvents" @day-click="onDayClick" />
+    </div>
+
+    <div class="cal-side">
+      <div class="card panel">
+        <div class="cal-side-label">Hoy</div>
+        <div class="cal-side-date">{{ todayLabel }}</div>
+        <div class="cal-side-sub">{{ todaysEvents.length }} evento{{ todaysEvents.length === 1 ? "" : "s" }} programado{{ todaysEvents.length === 1 ? "" : "s" }}</div>
+        <p v-if="!todaysEvents.length" style="font-size: 12.5px; color: var(--faint)">Nada programado para hoy.</p>
+        <div v-for="e in todaysEvents" :key="e.id" class="cal-today-row" @click="openEdit(e)">
+          <span class="cal-today-time">{{ e.start_time ? e.start_time.slice(0, 5) : "Todo el día" }}</span>
+          <div>
+            <div class="cal-today-title">{{ e.title }}</div>
+            <div class="cal-today-cat"><span class="cal-dot" :class="'cal-c-' + categoryColor(e.category)" style="margin-right: 5px"></span>{{ e.category }}<template v-if="e.start_time && e.end_time"> · hasta {{ timeRangeLabel(e.start_time, e.end_time).split("–")[1] }}</template></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card panel">
+        <div class="panel-title">Esta semana</div>
+        <div v-for="s in weekStats" :key="s.key" class="cal-week-row">
+          <span class="cal-legend-item"><span class="cal-dot" :class="'cal-c-' + s.color"></span>{{ s.label }}</span>
+          <span class="cal-count">{{ s.count }}</span>
+        </div>
+      </div>
+    </div>
   </div>
 
   <DayDetailModal

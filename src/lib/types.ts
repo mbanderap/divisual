@@ -317,6 +317,8 @@ export interface CalendarEvent {
   category: string; // "Despliegue" | "Reunión" | "Vacaciones" | "Teletrabajo"
   start_date: string;
   end_date: string | null; // repetición: se usa como "repetir hasta" (opcional)
+  start_time: string | null; // "HH:MM" (opcional)
+  end_time: string | null; // "HH:MM" (opcional)
   recurrence: string | null; // "weekly" | "monthly" | null
   recurrence_day: number | null; // semanal: 1(Lun)-7(Dom) · mensual: 1-31
   created_at: string;

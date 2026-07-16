@@ -22,6 +22,8 @@ const title = ref(props.event?.title ?? "");
 const category = ref(props.event?.category ?? props.defaultCategory ?? EVENT_CATEGORIES[0]);
 const startDate = ref(props.event?.start_date ?? props.defaultDate ?? "");
 const endDate = ref(props.event?.end_date ?? "");
+const startTime = ref(props.event?.start_time?.slice(0, 5) ?? "");
+const endTime = ref(props.event?.end_time?.slice(0, 5) ?? "");
 const description = ref(props.event?.description ?? "");
 const recurrence = ref<Recurrence | null>((props.event?.recurrence as Recurrence) ?? null);
 const recurrenceDay = ref<number | null>(props.event?.recurrence_day ?? null);
@@ -39,6 +41,7 @@ async function save() {
     const row = {
       title: title.value.trim(), category: category.value,
       start_date: startDate.value, end_date: nn(endDate.value),
+      start_time: nn(startTime.value), end_time: nn(endTime.value),
       description: nn(description.value),
       recurrence: recurrence.value, recurrence_day: recurrence.value ? recurrenceDay.value : null,
     };
@@ -78,7 +81,7 @@ async function remove() {
     <div class="field-row">
       <div class="field">
         <label>Categoría</label>
-        <select v-model="category"><option v-for="c in (allowedCategories ?? EVENT_CATEGORIES)" :key="c" :value="c">{{ c }}</option></select>
+        <select v-model="category"><option v-for="c in (event ? EVENT_CATEGORIES : (allowedCategories ?? EVENT_CATEGORIES))" :key="c" :value="c">{{ c }}</option></select>
       </div>
     </div>
     <div class="field-row">
@@ -87,6 +90,10 @@ async function remove() {
         <label>{{ recurrence ? "Repetir hasta (opcional)" : "Fecha de fin (opcional)" }}</label>
         <input v-model="endDate" type="date" />
       </div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Hora de inicio (opcional)</label><input v-model="startTime" type="time" /></div>
+      <div class="field"><label>Hora de fin (opcional)</label><input v-model="endTime" type="time" /></div>
     </div>
     <RecurrencePicker
       :recurrence="recurrence"
