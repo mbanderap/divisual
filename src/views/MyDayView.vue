@@ -98,7 +98,7 @@ function dueLabel(dateStr: string | null): string {
 <template>
   <div class="card myday-hero">
     <div class="myday-hero-main">
-      <div class="myday-date">☀️ {{ todayLabel }}</div>
+      <div class="myday-date">{{ todayLabel }}</div>
       <h1>{{ greeting }}, <span class="accent">{{ firstName }}</span></h1>
       <p class="myday-summary">{{ summary }}</p>
     </div>

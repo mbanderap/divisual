@@ -168,13 +168,13 @@ function onDealSaved() {
       </div>
     </div>
     <div class="card panel">
-      <div class="panel-title">Décimas <span class="hint">movimientos de década</span></div>
+      <div class="panel-title">Décimas <span class="hint">movimientos de décima</span></div>
       <div class="myday-stats" style="margin-bottom: 14px">
         <div class="myday-stat" style="flex: 1; background: var(--ok-soft); border-color: transparent">
-          <div class="ms-v pos">↑ —</div><div class="ms-l">Suben de década</div>
+          <div class="ms-v pos">↑ —</div><div class="ms-l">Suben de décima</div>
         </div>
         <div class="myday-stat" style="flex: 1; background: var(--danger-soft); border-color: transparent">
-          <div class="ms-v neg">↓ —</div><div class="ms-l">Bajan de década</div>
+          <div class="ms-v neg">↓ —</div><div class="ms-l">Bajan de décima</div>
         </div>
       </div>
       <p style="font-size: 12.5px; color: var(--faint)">Próximamente — necesita traer las reputaciones diarias de Jaippy.</p>
