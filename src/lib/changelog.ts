@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-07-16",
+    version: "v0.58",
+    title: "Importación real de Negocios desde HubSpot",
+    description: "63 negocios importados desde la exportación de HubSpot. La etapa de HubSpot se tradujo a las 6 etapas de Divisual (Interesados→Prospecto, Pendiente de respuesta→Contactado, Reunión programada→Propuesta, Pendiente de Renovación→Negociación, Cierre ganado→Ganado, Cierre perdido→Perdido) y se vincularon 55 negocios a su contacto por hubspot_id. El export no traía relación clara con hoteles/empresas, así que deals_hotels queda pendiente de vincular a mano o en una importación aparte.",
+    status: "done",
+  },
+  {
+    date: "2026-07-16",
     version: "v0.57",
     title: "Usuarios (antes \"Personal\") ligado a cuentas reales",
     description: "Se renombró Personal a Usuarios y se movió debajo de Changelog. Nueva tabla `profiles`, sincronizada con auth.users por trigger (el navegador no puede leer auth.users directamente), para saber quién tiene cuenta de verdad. Al crearse una cuenta nueva se crea también su ficha de personal automáticamente (nombre provisional a partir del correo), así que aparece sola en Usuarios sin darla de alta a mano. El Chat y el filtro por persona del Calendario ya solo muestran usuarios con cuenta, no todo el directorio de Personal.",
