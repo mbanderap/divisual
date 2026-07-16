@@ -13,7 +13,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     date: "2026-07-16",
     version: "v0.57",
     title: "Usuarios (antes \"Personal\") ligado a cuentas reales",
-    description: "Se renombró Personal a Usuarios y se movió debajo de Changelog. Nueva tabla `profiles`, sincronizada con auth.users por trigger (el navegador no puede leer auth.users directamente), para saber quién tiene cuenta de verdad. El Chat y el filtro por persona del Calendario ya solo muestran usuarios con cuenta, no todo el directorio de Personal.",
+    description: "Se renombró Personal a Usuarios y se movió debajo de Changelog. Nueva tabla `profiles`, sincronizada con auth.users por trigger (el navegador no puede leer auth.users directamente), para saber quién tiene cuenta de verdad. Al crearse una cuenta nueva se crea también su ficha de personal automáticamente (nombre provisional a partir del correo), así que aparece sola en Usuarios sin darla de alta a mano. El Chat y el filtro por persona del Calendario ya solo muestran usuarios con cuenta, no todo el directorio de Personal.",
     status: "done",
   },
   {
