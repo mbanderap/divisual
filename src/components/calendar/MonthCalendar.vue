@@ -82,7 +82,7 @@ function goToday() { current.value = new Date(); }
     >
       <div class="cal-daynum">{{ d.getDate() }}</div>
       <div class="cal-pills">
-        <span v-for="e in eventsOnDay(dateKey(d)).slice(0, 4)" :key="e.id" class="cal-pill" :class="'cal-c-' + categoryColor(e.category)"><span v-if="e.recurrence" class="icon-inline" v-html="ICONS.repeat"></span><span v-if="e.start_time" class="cal-pill-time">{{ e.start_time.slice(0, 5) }}</span>{{ e.title }}</span>
+        <span v-for="e in eventsOnDay(dateKey(d)).slice(0, 4)" :key="e.id" class="cal-pill" :class="['cal-c-' + categoryColor(e.category), { 'cal-pill-done': e.completed }]"><span v-if="e.recurrence" class="icon-inline" v-html="ICONS.repeat"></span><span v-if="e.start_time" class="cal-pill-time">{{ e.start_time.slice(0, 5) }}</span>{{ e.title }}</span>
         <span v-if="eventsOnDay(dateKey(d)).length > 4" class="cal-more">+{{ eventsOnDay(dateKey(d)).length - 4 }} más</span>
       </div>
     </div>

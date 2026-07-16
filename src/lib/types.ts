@@ -319,6 +319,7 @@ export interface CalendarEvent {
   end_date: string | null; // repetición: se usa como "repetir hasta" (opcional)
   start_time: string | null; // "HH:MM" (opcional)
   end_time: string | null; // "HH:MM" (opcional)
+  completed: boolean;
   recurrence: string | null; // "weekly" | "monthly" | null
   recurrence_day: number | null; // semanal: 1(Lun)-7(Dom) · mensual: 1-31
   created_at: string;

@@ -1,6 +1,9 @@
 import { defineStore } from "pinia";
 import { fetchAllRows, countRows } from "../lib/fetchAll";
+import { useToastStore } from "./toast";
 import type { Deal, Personnel, Tag, BillingModel, Ticket, Task, Story, Sprint, TaskLabel, CalendarEvent, Profile } from "../lib/types";
+
+const CATALOG_NAMES = ["deals", "tickets", "tasks", "stories", "sprints", "labels", "events", "personnel", "tags", "billing_models", "profiles"];
 
 interface Counts {
   contacts: number;
@@ -53,6 +56,13 @@ export const useCatalogStore = defineStore("catalogs", {
         fetchAllRows<BillingModel>("billing_models", "*", "name"),
         fetchAllRows<Profile>("profiles", "id, email", "email"),
       ]);
+      const failed = results
+        .map((r, i) => (r.status === "rejected" ? { name: CATALOG_NAMES[i], reason: r.reason } : null))
+        .filter((x): x is { name: string; reason: unknown } => x !== null);
+      if (failed.length) {
+        for (const f of failed) console.error(`Fallo al cargar "${f.name}":`, f.reason);
+        useToastStore().show(`No se pudieron cargar: ${failed.map((f) => f.name).join(", ")}. Revisa la consola.`, 6000);
+      }
       const [deals, tickets, tasks, stories, sprints, labels, events, personnel, tags, billing, profiles] = results.map((r) => (r.status === "fulfilled" ? r.value : []));
       this.deals = (deals as Deal[]).sort((a, b) => b.id - a.id);
       this.tickets = (tickets as Ticket[]).sort((a, b) => b.id - a.id);
