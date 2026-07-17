@@ -43,6 +43,7 @@ function defaultHotelColumns(): ColumnDef<Hotel>[] {
     { key: "city", label: "Ciudad", visible: true, dbCol: "city" },
     { key: "booking_url", label: "Booking", visible: true, dbCol: "booking_url" },
     { key: "is_client", label: "Cliente", visible: true, dbCol: "is_client" },
+    { key: "tenth_ups", label: "Décimas subidas", visible: true, numeric: true },
     { key: "objective", label: "Objetivo", visible: false, dbCol: "objective", numeric: true },
     { key: "tau", label: "TAU", visible: false, dbCol: "tau", numeric: true },
     { key: "equipo", label: "Equipo", visible: false, numeric: true },

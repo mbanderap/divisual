@@ -24,7 +24,7 @@ const catalogs = useCatalogStore();
 const toast = useToastStore();
 const confirm = useConfirmStore();
 
-const HOTELS_SELECT = "*, hotels_personnel(role, area, personnel(id, name, email)), deals_hotels(id, deals(id, name, value, status))";
+const HOTELS_SELECT = "*, hotels_personnel(role, area, personnel(id, name, email)), deals_hotels(id, deals(id, name, value, status)), hotel_tenth_ups(id)";
 
 const { rows, pager, fetchPage, setSearch, setFilters, setSort, setPage, setPageSize } = usePagedEntity<Hotel>(
   { table: "hotels", select: HOTELS_SELECT, searchCols: ["name"] },
@@ -44,12 +44,13 @@ const exporting = ref(false);
 async function exportCsv() {
   exporting.value = true;
   try {
-    const all = await fetchAllFiltered<Hotel>("hotels", "*, hotels_personnel(role, area, personnel(id, name))", "name", pager.search, ["name"], pager.filters);
+    const all = await fetchAllFiltered<Hotel>("hotels", "*, hotels_personnel(role, area, personnel(id, name)), hotel_tenth_ups(id)", "name", pager.search, ["name"], pager.filters);
     const visibleCols = columns.hoteles.filter((c) => c.visible);
     const csvRows = all.map((h) => {
       const row: Record<string, unknown> = {};
       for (const c of visibleCols) {
         if (c.key === "equipo") row[c.label] = (h.hotels_personnel || []).length;
+        else if (c.key === "tenth_ups") row[c.label] = (h.hotel_tenth_ups || []).length;
         else if (c.key === "is_client") row[c.label] = h.is_client ? "Sí" : "No";
         else if (c.key === "is_chain") row[c.label] = h.is_chain ? "Sí" : "No";
         else row[c.label] = (h as unknown as Record<string, unknown>)[c.dbCol ?? c.key];
@@ -166,6 +167,7 @@ function onSort(c: ColumnDef<Hotel>) { if (c.dbCol) setSort(c.dbCol); }
         </template>
         <template #cell-is_chain="{ row }">{{ row.is_chain ? "Sí" : "No" }}</template>
         <template #cell-equipo="{ row }">{{ (row.hotels_personnel || []).length }}</template>
+        <template #cell-tenth_ups="{ row }">{{ (row.hotel_tenth_ups || []).length }}</template>
       </DataTable>
       <Pager :page="pager.page" :page-size="pager.pageSize" :total="pager.total" @update:page="setPage" @update:page-size="setPageSize" />
     </template>
@@ -193,6 +195,7 @@ function onSort(c: ColumnDef<Hotel>) { if (c.dbCol) setSort(c.dbCol); }
             <span v-for="i in 5" :key="i" :class="{ on: i <= h.stars! }">★</span>
           </span>
           <span v-if="h.city">{{ h.city }}, ES</span>
+          <span v-if="(h.hotel_tenth_ups || []).length" class="hc-tenth-badge" title="Décimas subidas desde que está con Jaippy">▲ {{ (h.hotel_tenth_ups || []).length }}</span>
         </div>
         <div class="hc-foot">
           <template v-if="h.is_client">

@@ -157,6 +157,7 @@ export interface Hotel {
   deals_hotels?: HotelDealLink[];
   hotels_contacts?: HotelContactLink[];
   tickets?: { id: number; status: string | null; created_at: string }[];
+  hotel_tenth_ups?: { id: number }[];
 }
 
 export interface PersonnelHotelLink {

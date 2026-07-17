@@ -44,10 +44,14 @@ function onDrop(stage: string) {
 }
 async function moveTicket(ticket: Ticket, stage: string) {
   try {
-    const { error } = await supabase.from("tickets").update({ status: stage }).eq("id", ticket.id);
+    const { data, error } = await supabase.from("tickets").update({ status: stage }).eq("id", ticket.id).select("status").single();
     if (error) throw error;
-    ticket.status = stage;
-    toast.show(stage === "Cierre de ciclo" ? "Ciclo cerrado: " + ticket.title : "Movido a " + stage);
+    ticket.status = data.status;
+    if (stage === "Décima alcanzada" && data.status !== stage) {
+      toast.show(`¡Décima alcanzada! Se registra la subida y "${ticket.title}" vuelve a Seguimiento activo.`);
+    } else {
+      toast.show(stage === "Cierre de ciclo" ? "Ciclo cerrado: " + ticket.title : "Movido a " + stage);
+    }
   } catch (e) { toast.error(e, "mover el ticket"); }
 }
 </script>

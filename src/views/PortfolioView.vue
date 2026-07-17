@@ -4,6 +4,7 @@ import { useCatalogStore } from "../stores/catalogs";
 import { useSearchStore } from "../stores/search";
 import { useToastStore } from "../stores/toast";
 import { supabase } from "../lib/supabase";
+import { countRows } from "../lib/fetchAll";
 import { eur, fdate, num } from "../lib/format";
 import { TICKET_STAGES } from "../lib/types";
 import type { Hotel } from "../lib/types";
@@ -18,14 +19,17 @@ onUnmounted(() => search.unregister());
 
 const rows = ref<Hotel[]>([]);
 const loading = ref(true);
+const decimasAlcanzadas = ref(0);
 
 onMounted(async () => {
   try {
-    const { data, error } = await supabase
-      .from("hotels")
-      .select("*, deals_hotels(id, deals(id, name, value, status)), tickets(id, status, created_at)");
+    const [{ data, error }, tenthUpsCount] = await Promise.all([
+      supabase.from("hotels").select("*, deals_hotels(id, deals(id, name, value, status)), tickets(id, status, created_at)"),
+      countRows("hotel_tenth_ups"),
+    ]);
     if (error) throw error;
     rows.value = (data ?? []) as Hotel[];
+    decimasAlcanzadas.value = tenthUpsCount;
   } catch (e) { toast.error(e, "cargar la cartera"); }
   finally { loading.value = false; }
 });
@@ -62,7 +66,6 @@ const tab = ref<"resumen" | "tickets">("resumen");
 const ticketsActivos = computed(() => catalogs.tickets.filter((t) => t.status !== "Cierre de ciclo").length);
 const enConsolidacion = computed(() => catalogs.tickets.filter((t) => t.status === "Consolidación").length);
 const enRiesgo = computed(() => rows.value.filter((h) => openTicketsCount(h) >= 2).length);
-const sinImporte = computed(() => rows.value.filter((h) => importe(h) === 0).length);
 
 const recentChanges = computed(() =>
   [...rows.value]
@@ -101,7 +104,7 @@ const visible = computed(() => {
       <div class="card kpi"><div class="k-label">Tickets activos</div><div class="k-value">{{ ticketsActivos }}</div><div class="k-delta">en pipeline CS</div></div>
       <div class="card kpi"><div class="k-label">En consolidación</div><div class="k-value">{{ enConsolidacion }}</div><div class="k-delta">periodo activo</div></div>
       <div class="card kpi"><div class="k-label">En riesgo</div><div class="k-value">{{ enRiesgo }}</div><div class="k-delta">2+ tickets abiertos</div></div>
-      <div class="card kpi"><div class="k-label">Sin importe</div><div class="k-value">{{ sinImporte }}</div><div class="k-delta">tickets incompletos</div></div>
+      <div class="card kpi"><div class="k-label">Décimas alcanzadas</div><div class="k-value">{{ decimasAlcanzadas }}</div><div class="k-delta">subidas desde que están con Jaippy</div></div>
     </div>
 
     <div class="card panel">

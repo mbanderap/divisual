@@ -10,6 +10,27 @@ export interface ChangelogEntry {
 // Las entradas más recientes van primero.
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    date: "2026-07-17",
+    version: "v0.61",
+    title: "Décimas alcanzadas: registro real y KPI en Cartera activa",
+    description: "El KPI \"Sin importe\" de Cartera activa no significaba nada (contaba hoteles sin negocio ganado vinculado, casi todos) y se sustituyó por \"Décimas alcanzadas\": un recuento real. Cada vez que un ticket entra en la etapa \"Décima alcanzada\" se registra en una tabla nueva (hotel + fecha) y el ticket vuelve solo a \"Seguimiento activo\", para poder subir de década otra vez más adelante. Los 10 tickets que ya estaban en esa etapa se registraron y se movieron. En Hoteles hay una columna/insignia \"Décimas subidas\" por hotel.",
+    status: "done",
+  },
+  {
+    date: "2026-07-17",
+    version: "v0.60",
+    title: "Arreglo: los tickets no se cargaban tras importarlos",
+    description: "A tickets le faltaban las foreign keys hacia companies, personnel y hotels (el mismo problema que ya había pasado con events_personnel, tickets_contacts y tasks_personnel): sin ellas, la consulta anidada de Tickets fallaba en silencio y vaciaba la lista. Añadidas las 3 foreign keys que faltaban.",
+    status: "done",
+  },
+  {
+    date: "2026-07-17",
+    version: "v0.59",
+    title: "Importación real de Tickets desde HubSpot",
+    description: "35 tickets de Customer Success importados desde la exportación de HubSpot (se descartó el único ticket del pipeline \"Control de bugs\", que no encaja aquí). La etapa se tradujo a las 5 de Divisual (Seguimiento activo→Seguimiento activo, Consolidación→Consolidación, Décima ya consolidada→Décima alcanzada, Mantenimiento→Décima alcanzada, Churn / no renueva→Cierre de ciclo). Vinculados 33 a su hotel (por ID Jaippy), 34 a su empresa y 6 a un contacto; ninguno a un propietario porque todavía no hay personal con esos nombres dado de alta.",
+    status: "done",
+  },
+  {
     date: "2026-07-16",
     version: "v0.58",
     title: "Importación real de Negocios desde HubSpot",
